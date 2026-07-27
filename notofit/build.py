@@ -21,7 +21,8 @@ from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 from fontTools.subset import Subsetter, Options
 
-from .palt import bake
+from .palt import bake, DEFAULT_FRACTIONS
+from .yakumono import add_kern_pairs, remove_features
 
 ROOT = Path(__file__).resolve().parent.parent
 NOTO = ROOT / 'sources' / 'NotoSansJP.ttf'
@@ -39,11 +40,27 @@ class WeightConfig:
     baselineOffset: int = 0  # 欧文の上下位置（フォントユニット）
 
 
+#: 削除する feature。halt は Chromium の text-spacing-trim が使い kern と二重適用に
+#: なるため。vhal / vpal / vkrn は横書き限定の方針により不要。
+DROP_FEATURES = ('halt', 'vhal', 'vpal', 'vkrn')
+
+
+@dataclass
+class YakumonoConfig:
+    """約物の隣接処理（kern ペア調整）。1000 upem 単位、負で詰まる。
+
+    全角ベタで二重になったアキを取り除く量。既定の -500 で JLREQ の目標値になる。
+    """
+    pair: int = -500        # 括弧・句読点どうしが隣接したとき
+    middle: int = -500      # 中点類がからむとき
+
+
 @dataclass
 class TuningConfig:
     """調整ツールが決める設計値の全体。"""
     weights: list[WeightConfig] = field(default_factory=list)
-    paltFraction: float = 0.0
+    paltFractions: dict = field(default_factory=lambda: dict(DEFAULT_FRACTIONS))
+    yakumono: YakumonoConfig = field(default_factory=YakumonoConfig)
     excludeCodepoints: list[str] = field(default_factory=list)
     familyName: str = 'Notofit JP'
 
@@ -51,6 +68,8 @@ class TuningConfig:
     def load(cls, path):
         data = json.loads(Path(path).read_text())
         data['weights'] = [WeightConfig(**w) for w in data.get('weights', [])]
+        if 'yakumono' in data:
+            data['yakumono'] = YakumonoConfig(**data['yakumono'])
         return cls(**data)
 
     def save(self, path):
@@ -82,13 +101,14 @@ def _subset(src: Path, text: str, dest: Path):
     font.close()
 
 
-def prepare_base(wght: int, palt_fraction: float, text: str | None = None) -> Path:
-    """和文（Noto）を静的化し palt を焼き込んだ TTF を作る。結果はキャッシュする。
+def prepare_base(wght: int, cfg: 'TuningConfig', text: str | None = None) -> Path:
+    """和文（Noto）を静的化し、工程②（palt 焼き込み・kern・feature 削除）を適用する。
 
-    text を渡すと先にサブセットしてから処理する（プレビュー用）。
+    text を渡すと先にサブセットしてから処理する（プレビュー用）。結果はキャッシュする。
     """
     CACHE.mkdir(parents=True, exist_ok=True)
-    dest = CACHE / f'noto-{wght}-p{palt_fraction}-{_key(text or "full")}.ttf'
+    signature = (sorted(cfg.paltFractions.items()), cfg.yakumono.pair, cfg.yakumono.middle)
+    dest = CACHE / f'noto-{wght}-{_key(signature)}-{_key(text or "full")}.ttf'
     if dest.exists():
         return dest
 
@@ -100,9 +120,11 @@ def prepare_base(wght: int, palt_fraction: float, text: str | None = None) -> Pa
             _subset(NOTO, text, sub_path)
         src = sub_path
 
+    # ② は静的化の後に行う。palt が FeatureVariations でウェイトにより変わるため。
     font = instancer.instantiateVariableFont(TTFont(src), {'wght': wght}, updateFontNames=False)
-    if palt_fraction > 0:
-        bake(font, palt_fraction)
+    bake(font, cfg.paltFractions)
+    add_kern_pairs(font, cfg.yakumono.pair, cfg.yakumono.middle)
+    remove_features(font, DROP_FEATURES)
     font.save(dest)
     font.close()
     return dest
@@ -160,7 +182,7 @@ def build_weight(cfg: TuningConfig, weight: int, out_dir: Path,
                  text: str | None = None, woff2: bool = False) -> Path:
     """1ウェイト分を生成する。text を渡すとその文字だけのプレビュー用フォントになる。"""
     wc = cfg.weight(weight)
-    base = prepare_base(wc.jaWght, cfg.paltFraction, text)
+    base = prepare_base(wc.jaWght, cfg, text)
     sub = prepare_sub(text)
     stem = f'NotofitJP-{weight}'
     out_ttf = Path(out_dir) / f'{stem}.ttf'

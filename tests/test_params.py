@@ -11,7 +11,8 @@ ok=lambda c:'\033[32mPASS\033[0m' if c else '\033[31mFAIL\033[0m'
 res=[]
 
 def measure(scale=1.0, baseline=0, lw=400):
-    cfg=TuningConfig(weights=[WeightConfig(400,400,lw,scale,baseline)],paltFraction=0.0)
+    cfg=TuningConfig(weights=[WeightConfig(400,400,lw,scale,baseline)],
+                     paltFractions={'kana':0.0,'latin':0.0,'yakumono':0.0,'other':0.0})
     p=build_weight(cfg,400,out/f's{scale}b{baseline}w{lw}',text=TEXT)
     f=TTFont(p); cm=f.getBestCmap(); glyf=f['glyf']; hm=f['hmtx']
     def g(ch):

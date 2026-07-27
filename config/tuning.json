@@ -15,7 +15,16 @@
       "baselineOffset": 0
     }
   ],
-  "paltFraction": 0.0,
+  "paltFractions": {
+    "kana": 1.0,
+    "latin": 1.0,
+    "yakumono": 0.0,
+    "other": 0.0
+  },
+  "yakumono": {
+    "pair": -500,
+    "middle": -500
+  },
   "excludeCodepoints": [],
   "familyName": "Notofit JP"
 }

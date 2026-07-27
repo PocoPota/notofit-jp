@@ -18,8 +18,8 @@ from urllib.parse import urlparse, parse_qs
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 
-from .build import (ROOT, CACHE, TuningConfig, WeightConfig, build_weight,
-                    prepare_base, _subset, _key, NOTO)
+from .build import (ROOT, CACHE, TuningConfig, WeightConfig, YakumonoConfig,
+                    build_weight, _subset, _key, NOTO)
 
 PORT = 8765
 TUNER = ROOT / 'tuner'
@@ -30,7 +30,6 @@ _lock = threading.Lock()
 def default_config() -> TuningConfig:
     return TuningConfig(
         weights=[WeightConfig(400, 400, 400, 1.0, 0), WeightConfig(700, 700, 700, 1.0, 0)],
-        paltFraction=0.0,
     )
 
 
@@ -116,7 +115,16 @@ class Handler(BaseHTTPRequestHandler):
                 scale=float(q.get('scale', ['1.0'])[0]),
                 baselineOffset=int(q.get('baselineOffset', ['0'])[0]),
             )],
-            paltFraction=float(q.get('palt', ['0'])[0]),
+            paltFractions={
+                'kana': float(q.get('paltKana', ['1.0'])[0]),
+                'latin': float(q.get('paltLatin', ['1.0'])[0]),
+                'yakumono': float(q.get('paltYakumono', ['0.0'])[0]),
+                'other': 0.0,
+            },
+            yakumono=YakumonoConfig(
+                pair=int(q.get('kernPair', ['-500'])[0]),
+                middle=int(q.get('kernMiddle', ['-500'])[0]),
+            ),
         )
         with _lock, tempfile.TemporaryDirectory() as tmp:
             path = build_weight(cfg, weight, Path(tmp), text=text, woff2=True)

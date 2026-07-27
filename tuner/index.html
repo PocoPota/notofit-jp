@@ -85,7 +85,13 @@
     font-feature-settings: var(--preview-features);
     margin: 0; word-break: break-word;
   }
-  .ref { font-family: var(--ref-font), sans-serif; }
+  /* 素の Noto は halt を持つため、Chromium だと text-spacing-trim が既定で効いて
+     すでにトリムされた状態で表示される。既定では space-all で無効化し、
+     全角ベタ（Safari / Firefox で見える状態）を基準として示す。 */
+  .ref {
+    font-family: var(--ref-font), sans-serif;
+    text-spacing-trim: var(--ref-trim);
+  }
 
   /* 重ね合わせ: 調整後を通常色、素の Noto を赤で重ねてズレを見る。
      折り返すと比較にならないため nowrap にし、字送りの差を横方向のズレとして読む。 */
@@ -95,7 +101,13 @@
     position: absolute; inset: 0; color: var(--ref); opacity: .55; pointer-events: none;
   }
   .stack .ref { color: #b0b6c4; }
-  .stack .lbl { font-size: 9px; color: #a3a9b8; letter-spacing: .1em; margin: 10px 0 2px; }
+
+  /* 見本をペア単位で並べる。文字列を空白で区切ると、区切りの見え方が前後の約物の
+     インク位置に左右されて比較にならないため、間隔は CSS で一定にする。 */
+  .item-row { display: flex; flex-wrap: wrap; gap: 4px 1.4em; align-items: baseline; }
+  .item { position: relative; display: inline-block; }
+  .item .ovref { position: absolute; left: 0; top: 0; color: var(--ref); opacity: .55; }
+  .lbl { font-size: 9px; color: #a3a9b8; letter-spacing: .1em; margin: 10px 0 2px; }
 </style>
 </head>
 <body>
@@ -132,14 +144,36 @@
     </section>
 
     <section>
+      <h2>約物の隣接処理（kern）</h2>
+      <div class="field">
+        <label><span class="name">括弧・句読点どうし</span><span class="val" id="v-kernPair"></span></label>
+        <input type="range" id="kernPair" min="-700" max="0" step="10">
+        <div class="hint">`」「` `。」` が隣接したときに引く量。JLREQ 相当は −500</div>
+      </div>
+      <div class="field">
+        <label><span class="name">中点がらみ</span><span class="val" id="v-kernMiddle"></span></label>
+        <input type="range" id="kernMiddle" min="-700" max="0" step="10">
+        <div class="hint">`」・` `・「` など。JLREQ 相当は −500（字面が四分アキになる）</div>
+      </div>
+      <div class="hint" style="font-size:10px;color:var(--dim)">
+        約物の字幅は全角のまま。単独で現れる約物の字送りは変わらない。
+      </div>
+    </section>
+
+    <section>
       <h2>表示条件</h2>
       <div class="field">
-        <label><span class="name">palt 焼き込み比率</span><span class="val" id="v-palt"></span></label>
-        <div class="presets" id="palt-presets"></div>
+        <label><span class="name">palt 焼き込み｜かな</span><span class="val" id="v-paltKana"></span></label>
+        <div class="presets" id="paltKana-presets"></div>
+      </div>
+      <div class="field">
+        <label><span class="name">palt 焼き込み｜全角英数</span><span class="val" id="v-paltLatin"></span></label>
+        <div class="presets" id="paltLatin-presets"></div>
         <div class="hint">調整対象ではない。どの前提で見ているかの切り替え</div>
       </div>
       <div class="row"><input type="checkbox" id="feat-palt"><label for="feat-palt">palt を有効にした状態で見る</label></div>
       <div class="row"><input type="checkbox" id="show-ref" checked><label for="show-ref">素の Noto Sans JP を並べる</label></div>
+      <div class="row"><input type="checkbox" id="ref-trim"><label for="ref-trim">素の Noto にブラウザのトリムを効かせる（Chromium 相当）</label></div>
       <div class="row"><input type="checkbox" id="overlay"><label for="overlay">重ねて表示（ズレを見る）</label></div>
     </section>
 
@@ -176,6 +210,14 @@
       <div id="block-baseline"></div>
     </div>
     <div class="specimen">
+      <h3>約物の隣接（詰まるべき）</h3>
+      <div id="block-pair"></div>
+    </div>
+    <div class="specimen">
+      <h3>約物の単独（全角のままであるべき）</h3>
+      <div id="block-solo"></div>
+    </div>
+    <div class="specimen">
       <h3>約物と数字</h3>
       <div id="block-misc"></div>
     </div>
@@ -187,15 +229,19 @@ const DEFAULT_TEXT =
   '日本語とEnglishの混植を確認する。Notofit JP は Outfit と Noto Sans JP を合成したフォントです。';
 const BASELINE_TEXT = 'あAアB亜Cかd永Ex';
 const MISC_TEXT = '「引用」（括弧）・中点：コロン、読点。句点 12:34 AM 2026年7月27日 100%';
-const PALT_PRESETS = [0, 0.34, 0.5, 1.0];
+const PAIRS = ['」「', '。」', '、」', '）（', '』『', '」（', '・「', '」・'];
+const SOLOS = ['あ「い', 'う」え', 'お。か', 'き、く', 'け・こ', 'さ：し'];
+const PALT_PRESETS = [0, 0.5, 1.0];
 
 const state = {
   weights: {},
-  paltFraction: 0,
+  paltFractions: { kana: 1.0, latin: 1.0, yakumono: 0.0, other: 0.0 },
+  yakumono: { pair: -500, middle: -500 },
   current: 400,
   text: DEFAULT_TEXT,
   size: 44,
   showRef: true,
+  refTrim: false,
   overlay: false,
   featPalt: false,
 };
@@ -203,7 +249,7 @@ let gen = 0, timer = null, loaded = [];
 
 const $ = (id) => document.getElementById(id);
 const wc = () => state.weights[state.current];
-const allText = () => state.text + BASELINE_TEXT + MISC_TEXT +
+const allText = () => state.text + BASELINE_TEXT + MISC_TEXT + PAIRS.join('') + SOLOS.join('') +
   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
 function status(msg, err = false) {
@@ -214,7 +260,8 @@ function status(msg, err = false) {
 async function loadConfig() {
   const cfg = await (await fetch('/api/config')).json();
   cfg.weights.forEach((w) => { state.weights[w.weight] = w; });
-  state.paltFraction = cfg.paltFraction ?? 0;
+  Object.assign(state.paltFractions, cfg.paltFractions || {});
+  Object.assign(state.yakumono, cfg.yakumono || {});
   state.current = cfg.weights[0]?.weight ?? 400;
   buildTabs();
   buildPresets();
@@ -234,13 +281,19 @@ function buildTabs() {
 }
 
 function buildPresets() {
-  $('palt-presets').innerHTML = '';
-  PALT_PRESETS.forEach((p) => {
-    const b = document.createElement('button');
-    b.textContent = p.toFixed(2);
-    b.className = p === state.paltFraction ? 'on' : '';
-    b.onclick = () => { state.paltFraction = p; buildPresets(); syncControls(); refresh(); };
-    $('palt-presets').appendChild(b);
+  ['kana', 'latin'].forEach((key) => {
+    const host = $(`palt${key[0].toUpperCase()}${key.slice(1)}-presets`);
+    host.innerHTML = '';
+    PALT_PRESETS.forEach((p) => {
+      const b = document.createElement('button');
+      b.textContent = p.toFixed(2);
+      b.className = p === state.paltFractions[key] ? 'on' : '';
+      b.onclick = () => {
+        state.paltFractions[key] = p;
+        buildPresets(); syncControls(); refresh();
+      };
+      host.appendChild(b);
+    });
   });
 }
 
@@ -251,10 +304,15 @@ function syncControls() {
   $('latinWght').value = w.latinWght;
   $('size').value = state.size;
   $('text').value = state.text;
+  $('kernPair').value = state.yakumono.pair;
+  $('kernMiddle').value = state.yakumono.middle;
   $('v-scale').textContent = Number(w.scale).toFixed(3);
   $('v-baseline').textContent = (w.baselineOffset > 0 ? '+' : '') + w.baselineOffset;
   $('v-latinWght').textContent = w.latinWght;
-  $('v-palt').textContent = state.paltFraction.toFixed(2);
+  $('v-paltKana').textContent = state.paltFractions.kana.toFixed(2);
+  $('v-paltLatin').textContent = state.paltFractions.latin.toFixed(2);
+  $('v-kernPair').textContent = state.yakumono.pair;
+  $('v-kernMiddle').textContent = state.yakumono.middle;
   $('v-size').textContent = state.size + 'px';
 }
 
@@ -276,7 +334,10 @@ async function refresh() {
   const q = new URLSearchParams({
     weight: w.weight, jaWght: w.jaWght, latinWght: w.latinWght,
     scale: w.scale, baselineOffset: w.baselineOffset,
-    palt: state.paltFraction, text,
+    paltKana: state.paltFractions.kana, paltLatin: state.paltFractions.latin,
+    paltYakumono: state.paltFractions.yakumono,
+    kernPair: state.yakumono.pair, kernMiddle: state.yakumono.middle,
+    text,
   });
   try {
     const t0 = performance.now();
@@ -290,8 +351,9 @@ async function refresh() {
     root.setProperty('--ref-font', rf);
     root.setProperty('--preview-weight', 400);   // 静的フォントなので合成側で太さは確定済み
     root.setProperty('--preview-features', state.featPalt ? '"palt"' : 'normal');
+    root.setProperty('--ref-trim', state.refTrim ? 'normal' : 'space-all');
     render();
-    status(`${Math.round(performance.now() - t0)}ms · ${w.weight} · palt ${state.paltFraction}`);
+    status(`${Math.round(performance.now() - t0)}ms · ${w.weight} · kern ${state.yakumono.pair}/${state.yakumono.middle}`);
   } catch (e) {
     status('エラー: ' + e.message, true);
   }
@@ -319,10 +381,57 @@ function block(el, text, px, withRef = true) {
     ref.textContent = text;
     if (!state.overlay) {
       const l = document.createElement('div');
-      l.className = 'lbl'; l.textContent = 'NOTO SANS JP（素）';
+      l.className = 'lbl';
+    l.textContent = state.refTrim ? 'NOTO SANS JP（素・ブラウザのトリムあり）'
+                                  : 'NOTO SANS JP（素・全角ベタ）';
       el.appendChild(l);
     }
     el.appendChild(ref);
+  }
+}
+
+function itemBlock(el, items, px) {
+  el.className = '';
+  el.innerHTML = '';
+  const glyphs = (text, cls) => {
+    const span = document.createElement('span');
+    span.className = cls;
+    span.style.fontSize = px + 'px';
+    span.textContent = text;
+    return span;
+  };
+  const row = (cls) => {
+    const div = document.createElement('div');
+    div.className = 'item-row';
+    items.forEach((t) => {
+      const cell = document.createElement('span');
+      cell.className = 'item';
+      cell.appendChild(glyphs(t, cls));
+      if (state.overlay && state.showRef) {
+        const ref = glyphs(t, 'sample ref');
+        ref.classList.add('ovref');
+        cell.appendChild(ref);
+      }
+      div.appendChild(cell);
+    });
+    return div;
+  };
+  const label = (text) => {
+    const l = document.createElement('div');
+    l.className = 'lbl';
+    l.textContent = text;
+    el.appendChild(l);
+  };
+  if (state.overlay && state.showRef) {
+    el.appendChild(row('sample'));
+    return;
+  }
+  if (state.showRef) label('NOTOFIT JP');
+  el.appendChild(row('sample'));
+  if (state.showRef) {
+    label(state.refTrim ? 'NOTO SANS JP（素・ブラウザのトリムあり）'
+                        : 'NOTO SANS JP（素・全角ベタ）');
+    el.appendChild(row('sample ref'));
   }
 }
 
@@ -330,6 +439,8 @@ function render() {
   block($('block-head'), state.text, state.size);
   block($('block-body'), state.text.repeat(2), 16);
   block($('block-baseline'), BASELINE_TEXT, Math.max(state.size, 56));
+  itemBlock($('block-pair'), PAIRS, Math.max(28, state.size * 0.7));
+  itemBlock($('block-solo'), SOLOS, Math.max(28, state.size * 0.7));
   block($('block-misc'), MISC_TEXT, 22);
 }
 
@@ -340,9 +451,21 @@ function render() {
     schedule();
   });
 });
+['kernPair', 'kernMiddle'].forEach((k) => {
+  $(k).addEventListener('input', (e) => {
+    state.yakumono[k === 'kernPair' ? 'pair' : 'middle'] = parseInt(e.target.value, 10);
+    syncControls();
+    schedule();
+  });
+});
 $('size').addEventListener('input', (e) => { state.size = +e.target.value; syncControls(); render(); });
 $('text').addEventListener('input', (e) => { state.text = e.target.value; schedule(); });
 $('show-ref').addEventListener('change', (e) => { state.showRef = e.target.checked; render(); });
+$('ref-trim').addEventListener('change', (e) => {
+  state.refTrim = e.target.checked;
+  document.documentElement.style.setProperty('--ref-trim', state.refTrim ? 'normal' : 'space-all');
+  render();
+});
 $('overlay').addEventListener('change', (e) => { state.overlay = e.target.checked; render(); });
 $('feat-palt').addEventListener('change', (e) => {
   state.featPalt = e.target.checked;
@@ -353,7 +476,8 @@ function configJSON() {
   return {
     weights: Object.keys(state.weights).map(Number).sort((a, b) => a - b)
       .map((w) => state.weights[w]),
-    paltFraction: state.paltFraction,
+    paltFractions: state.paltFractions,
+    yakumono: state.yakumono,
     excludeCodepoints: [],
     familyName: 'Notofit JP',
   };
