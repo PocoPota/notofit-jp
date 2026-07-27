@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+
+# 元フォント（各自で取得する。docs/notes/m1-merge.md の再現手順を参照）
+sources/
+
+# ビルド生成物（設定と検証スクリプトは追跡する）
+build/*
+!build/*.json
+!build/*.py
+
+dist/

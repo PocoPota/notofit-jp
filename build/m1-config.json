@@ -1,0 +1,24 @@
+{
+  "baseFont": {
+    "path": "sources/NotoSansJP.ttf",
+    "scale": 1.0,
+    "baselineOffset": 0,
+    "axes": [{"tag": "wght", "currentValue": 400}]
+  },
+  "subFont": {
+    "path": "sources/Outfit.ttf",
+    "scale": 1.0,
+    "baselineOffset": 0,
+    "axes": [{"tag": "wght", "currentValue": 400}],
+    "excludeCodepoints": []
+  },
+  "output": {
+    "familyName": "Notofit JP",
+    "weight": 400,
+    "metricsSource": "base",
+    "metadataMode": "merge"
+  },
+  "export": {
+    "path": { "font": "build/NotofitJP-Regular.ttf" }
+  }
+}
