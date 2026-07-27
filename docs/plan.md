@@ -306,6 +306,12 @@ CSS の `text-autospace: normal` に委ね、フォントには含めない。3�
 
 ## 9. 参考
 
+### 関連ドキュメント
+
+- [notes/tools.md](notes/tools.md) — 使用ツールの調査メモ
+
+### 外部資料
+
 - [Gen Interface JP](https://gen.typesetting.jp/) / [ARCHITECTURE.md](https://github.com/yamatoiizuka/gen-interface-jp/blob/main/docs/ARCHITECTURE.md) — 同一構成の実装例
 - [fontTools varLib.instancer](https://fonttools.readthedocs.io/en/latest/varLib/instancer.html) / [subset](https://fonttools.readthedocs.io/en/latest/subset/)
 - [Google Fonts launches Japanese support](https://developers.googleblog.com/en/google-fonts-launches-japanese-support/) — スライシング手法の一次情報
