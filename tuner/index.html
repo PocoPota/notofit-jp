@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notofit JP 和欧調整ツール</title>
+<style>
+  :root {
+    --bg: #14161a; --panel: #1c1f25; --line: #2c313a; --fg: #e6e9ef;
+    --dim: #8a93a3; --accent: #6ea8fe; --ref: #ff6b8a;
+    --preview-bg: #fbfbfd; --preview-fg: #16181d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 13px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    height: 100vh; overflow: hidden;
+  }
+  .app { display: grid; grid-template-columns: 290px 1fr; height: 100vh; }
+
+  aside {
+    background: var(--panel); border-right: 1px solid var(--line);
+    overflow-y: auto; padding: 16px;
+  }
+  h1 { font-size: 13px; margin: 0 0 4px; letter-spacing: .04em; }
+  .sub { color: var(--dim); font-size: 11px; margin-bottom: 16px; }
+  section { border-top: 1px solid var(--line); padding: 14px 0; }
+  section:first-of-type { border-top: 0; padding-top: 0; }
+  h2 {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .1em;
+    color: var(--dim); margin: 0 0 10px; font-weight: 600;
+  }
+
+  .tabs { display: flex; gap: 6px; }
+  .tabs button {
+    flex: 1; padding: 7px; background: transparent; color: var(--dim);
+    border: 1px solid var(--line); border-radius: 6px; cursor: pointer; font-size: 12px;
+  }
+  .tabs button.on { background: var(--accent); border-color: var(--accent); color: #0d1117; font-weight: 600; }
+
+  .field { margin-bottom: 12px; }
+  .field label { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+  .field .name { font-size: 11px; }
+  .field .val {
+    font: 600 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--accent); background: #0f1116; padding: 3px 6px; border-radius: 4px;
+  }
+  .field .hint { font-size: 10px; color: var(--dim); margin-top: 4px; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+
+  .presets { display: flex; gap: 5px; flex-wrap: wrap; }
+  .presets button {
+    padding: 5px 9px; background: transparent; color: var(--dim);
+    border: 1px solid var(--line); border-radius: 5px; cursor: pointer;
+    font: 500 11px/1 ui-monospace, Menlo, monospace;
+  }
+  .presets button.on { background: var(--accent); border-color: var(--accent); color: #0d1117; }
+
+  textarea, .num {
+    width: 100%; background: #0f1116; color: var(--fg); border: 1px solid var(--line);
+    border-radius: 5px; padding: 7px; font-size: 12px; font-family: inherit; resize: vertical;
+  }
+  .row { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; font-size: 11px; }
+  .row input[type=checkbox] { accent-color: var(--accent); }
+
+  .actions { display: flex; gap: 7px; margin-top: 4px; }
+  .actions button {
+    flex: 1; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 11px;
+    border: 1px solid var(--line); background: transparent; color: var(--fg);
+  }
+  .actions button.primary { background: var(--accent); border-color: var(--accent); color: #0d1117; font-weight: 600; }
+  #status { font-size: 10px; color: var(--dim); margin-top: 8px; min-height: 1.4em; }
+  #status.err { color: var(--ref); }
+
+  main { overflow-y: auto; background: var(--preview-bg); color: var(--preview-fg); }
+  .specimen { border-bottom: 1px solid #e6e8ee; padding: 20px 26px; }
+  .specimen h3 {
+    font: 600 9px/1 -apple-system, sans-serif; letter-spacing: .12em; text-transform: uppercase;
+    color: #a3a9b8; margin: 0 0 12px;
+  }
+  .sample {
+    font-family: var(--preview-font), sans-serif;
+    font-weight: var(--preview-weight);
+    text-autospace: normal;
+    font-feature-settings: var(--preview-features);
+    margin: 0; word-break: break-word;
+  }
+  .ref { font-family: var(--ref-font), sans-serif; }
+
+  /* 重ね合わせ: 調整後を通常色、素の Noto を赤で重ねてズレを見る。
+     折り返すと比較にならないため nowrap にし、字送りの差を横方向のズレとして読む。 */
+  .overlay { position: relative; overflow-x: hidden; }
+  .overlay .sample { white-space: nowrap; }
+  .overlay .ref {
+    position: absolute; inset: 0; color: var(--ref); opacity: .55; pointer-events: none;
+  }
+  .stack .ref { color: #b0b6c4; }
+  .stack .lbl { font-size: 9px; color: #a3a9b8; letter-spacing: .1em; margin: 10px 0 2px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1>Notofit JP 和欧調整ツール</h1>
+    <div class="sub">和欧の相対関係だけを扱う。グリフ個別の調整は対象外。</div>
+
+    <section>
+      <h2>ウェイト</h2>
+      <div class="tabs" id="tabs"></div>
+      <div class="hint" style="font-size:10px;color:var(--dim);margin-top:8px">
+        和文の wght はウェイト値で固定（置き換え互換性のため）。調整するのは欧文側。
+      </div>
+    </section>
+
+    <section>
+      <h2>欧文の調整</h2>
+      <div class="field">
+        <label><span class="name">SCALE（拡縮）</span><span class="val" id="v-scale"></span></label>
+        <input type="range" id="scale" min="0.80" max="1.20" step="0.005">
+        <div class="hint">和文の字面に対する欧文の大きさ</div>
+      </div>
+      <div class="field">
+        <label><span class="name">BASELINE_OFFSET（上下）</span><span class="val" id="v-baseline"></span></label>
+        <input type="range" id="baselineOffset" min="-80" max="80" step="1">
+        <div class="hint">正で上へ。1000 upem 単位</div>
+      </div>
+      <div class="field">
+        <label><span class="name">欧文の wght</span><span class="val" id="v-latinWght"></span></label>
+        <input type="range" id="latinWght" min="100" max="900" step="5">
+        <div class="hint">和文と見かけの太さが揃う位置</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>表示条件</h2>
+      <div class="field">
+        <label><span class="name">palt 焼き込み比率</span><span class="val" id="v-palt"></span></label>
+        <div class="presets" id="palt-presets"></div>
+        <div class="hint">調整対象ではない。どの前提で見ているかの切り替え</div>
+      </div>
+      <div class="row"><input type="checkbox" id="feat-palt"><label for="feat-palt">palt を有効にした状態で見る</label></div>
+      <div class="row"><input type="checkbox" id="show-ref" checked><label for="show-ref">素の Noto Sans JP を並べる</label></div>
+      <div class="row"><input type="checkbox" id="overlay"><label for="overlay">重ねて表示（ズレを見る）</label></div>
+    </section>
+
+    <section>
+      <h2>サンプル</h2>
+      <textarea id="text" rows="4"></textarea>
+      <div class="field" style="margin-top:10px">
+        <label><span class="name">見出しサイズ</span><span class="val" id="v-size"></span></label>
+        <input type="range" id="size" min="20" max="96" step="1">
+      </div>
+    </section>
+
+    <section>
+      <h2>設定</h2>
+      <div class="actions">
+        <button class="primary" id="save">保存</button>
+        <button id="copy">JSON をコピー</button>
+      </div>
+      <div id="status"></div>
+    </section>
+  </aside>
+
+  <main id="preview">
+    <div class="specimen">
+      <h3>混植（見出し）</h3>
+      <div id="block-head"></div>
+    </div>
+    <div class="specimen">
+      <h3>本文 16px</h3>
+      <div id="block-body"></div>
+    </div>
+    <div class="specimen">
+      <h3>ベースラインの確認</h3>
+      <div id="block-baseline"></div>
+    </div>
+    <div class="specimen">
+      <h3>約物と数字</h3>
+      <div id="block-misc"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+const DEFAULT_TEXT =
+  '日本語とEnglishの混植を確認する。Notofit JP は Outfit と Noto Sans JP を合成したフォントです。';
+const BASELINE_TEXT = 'あAアB亜Cかd永Ex';
+const MISC_TEXT = '「引用」（括弧）・中点：コロン、読点。句点 12:34 AM 2026年7月27日 100%';
+const PALT_PRESETS = [0, 0.34, 0.5, 1.0];
+
+const state = {
+  weights: {},
+  paltFraction: 0,
+  current: 400,
+  text: DEFAULT_TEXT,
+  size: 44,
+  showRef: true,
+  overlay: false,
+  featPalt: false,
+};
+let gen = 0, timer = null, loaded = [];
+
+const $ = (id) => document.getElementById(id);
+const wc = () => state.weights[state.current];
+const allText = () => state.text + BASELINE_TEXT + MISC_TEXT +
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+function status(msg, err = false) {
+  $('status').textContent = msg;
+  $('status').className = err ? 'err' : '';
+}
+
+async function loadConfig() {
+  const cfg = await (await fetch('/api/config')).json();
+  cfg.weights.forEach((w) => { state.weights[w.weight] = w; });
+  state.paltFraction = cfg.paltFraction ?? 0;
+  state.current = cfg.weights[0]?.weight ?? 400;
+  buildTabs();
+  buildPresets();
+  syncControls();
+  refresh();
+}
+
+function buildTabs() {
+  $('tabs').innerHTML = '';
+  Object.keys(state.weights).map(Number).sort((a, b) => a - b).forEach((w) => {
+    const b = document.createElement('button');
+    b.textContent = w;
+    b.className = w === state.current ? 'on' : '';
+    b.onclick = () => { state.current = w; buildTabs(); syncControls(); refresh(); };
+    $('tabs').appendChild(b);
+  });
+}
+
+function buildPresets() {
+  $('palt-presets').innerHTML = '';
+  PALT_PRESETS.forEach((p) => {
+    const b = document.createElement('button');
+    b.textContent = p.toFixed(2);
+    b.className = p === state.paltFraction ? 'on' : '';
+    b.onclick = () => { state.paltFraction = p; buildPresets(); syncControls(); refresh(); };
+    $('palt-presets').appendChild(b);
+  });
+}
+
+function syncControls() {
+  const w = wc();
+  $('scale').value = w.scale;
+  $('baselineOffset').value = w.baselineOffset;
+  $('latinWght').value = w.latinWght;
+  $('size').value = state.size;
+  $('text').value = state.text;
+  $('v-scale').textContent = Number(w.scale).toFixed(3);
+  $('v-baseline').textContent = (w.baselineOffset > 0 ? '+' : '') + w.baselineOffset;
+  $('v-latinWght').textContent = w.latinWght;
+  $('v-palt').textContent = state.paltFraction.toFixed(2);
+  $('v-size').textContent = state.size + 'px';
+}
+
+function schedule() { clearTimeout(timer); timer = setTimeout(refresh, 130); }
+
+async function loadFace(name, url) {
+  const buf = await (await fetch(url)).arrayBuffer();
+  const face = new FontFace(name, buf);
+  await face.load();
+  document.fonts.add(face);
+  loaded.push(face);
+  if (loaded.length > 8) document.fonts.delete(loaded.shift());
+  return name;
+}
+
+async function refresh() {
+  const w = wc(), text = allText(), id = ++gen;
+  status('生成中…');
+  const q = new URLSearchParams({
+    weight: w.weight, jaWght: w.jaWght, latinWght: w.latinWght,
+    scale: w.scale, baselineOffset: w.baselineOffset,
+    palt: state.paltFraction, text,
+  });
+  try {
+    const t0 = performance.now();
+    const [pv, rf] = await Promise.all([
+      loadFace(`pv${id}`, '/api/preview?' + q),
+      loadFace(`rf${id}`, '/api/reference?' + new URLSearchParams({ weight: w.jaWght, text })),
+    ]);
+    if (id !== gen) return;
+    const root = document.documentElement.style;
+    root.setProperty('--preview-font', pv);
+    root.setProperty('--ref-font', rf);
+    root.setProperty('--preview-weight', 400);   // 静的フォントなので合成側で太さは確定済み
+    root.setProperty('--preview-features', state.featPalt ? '"palt"' : 'normal');
+    render();
+    status(`${Math.round(performance.now() - t0)}ms · ${w.weight} · palt ${state.paltFraction}`);
+  } catch (e) {
+    status('エラー: ' + e.message, true);
+  }
+}
+
+function block(el, text, px, withRef = true) {
+  const mode = state.overlay ? 'overlay' : 'stack';
+  const showRef = state.showRef && withRef;
+  el.className = mode;
+  el.innerHTML = '';
+  const main = document.createElement('p');
+  main.className = 'sample';
+  main.style.fontSize = px + 'px';
+  main.textContent = text;
+  if (!state.overlay && showRef) {
+    const l = document.createElement('div');
+    l.className = 'lbl'; l.textContent = 'NOTOFIT JP';
+    el.appendChild(l);
+  }
+  el.appendChild(main);
+  if (showRef) {
+    const ref = document.createElement('p');
+    ref.className = 'sample ref';
+    ref.style.fontSize = px + 'px';
+    ref.textContent = text;
+    if (!state.overlay) {
+      const l = document.createElement('div');
+      l.className = 'lbl'; l.textContent = 'NOTO SANS JP（素）';
+      el.appendChild(l);
+    }
+    el.appendChild(ref);
+  }
+}
+
+function render() {
+  block($('block-head'), state.text, state.size);
+  block($('block-body'), state.text.repeat(2), 16);
+  block($('block-baseline'), BASELINE_TEXT, Math.max(state.size, 56));
+  block($('block-misc'), MISC_TEXT, 22);
+}
+
+['scale', 'baselineOffset', 'latinWght'].forEach((k) => {
+  $(k).addEventListener('input', (e) => {
+    wc()[k] = k === 'scale' ? parseFloat(e.target.value) : parseInt(e.target.value, 10);
+    syncControls();
+    schedule();
+  });
+});
+$('size').addEventListener('input', (e) => { state.size = +e.target.value; syncControls(); render(); });
+$('text').addEventListener('input', (e) => { state.text = e.target.value; schedule(); });
+$('show-ref').addEventListener('change', (e) => { state.showRef = e.target.checked; render(); });
+$('overlay').addEventListener('change', (e) => { state.overlay = e.target.checked; render(); });
+$('feat-palt').addEventListener('change', (e) => {
+  state.featPalt = e.target.checked;
+  document.documentElement.style.setProperty('--preview-features', state.featPalt ? '"palt"' : 'normal');
+});
+
+function configJSON() {
+  return {
+    weights: Object.keys(state.weights).map(Number).sort((a, b) => a - b)
+      .map((w) => state.weights[w]),
+    paltFraction: state.paltFraction,
+    excludeCodepoints: [],
+    familyName: 'Notofit JP',
+  };
+}
+$('save').onclick = async () => {
+  const r = await fetch('/api/config', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(configJSON()),
+  });
+  status((await r.json()).saved ? '保存しました' : '保存に失敗');
+};
+$('copy').onclick = async () => {
+  await navigator.clipboard.writeText(JSON.stringify(configJSON(), null, 2));
+  status('コピーしました');
+};
+
+loadConfig();
+</script>
+</body>
+</html>

@@ -8,6 +8,6 @@ sources/
 # ビルド生成物（設定と検証スクリプトは追跡する）
 build/*
 !build/*.json
-!build/*.py
+!build/verify_m1.py
 
 dist/

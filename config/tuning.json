@@ -1,0 +1,21 @@
+{
+  "weights": [
+    {
+      "weight": 400,
+      "jaWght": 400,
+      "latinWght": 400,
+      "scale": 1.0,
+      "baselineOffset": 0
+    },
+    {
+      "weight": 700,
+      "jaWght": 700,
+      "latinWght": 700,
+      "scale": 1.0,
+      "baselineOffset": 0
+    }
+  ],
+  "paltFraction": 0.0,
+  "excludeCodepoints": [],
+  "familyName": "Notofit JP"
+}
