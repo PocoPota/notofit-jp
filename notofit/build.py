@@ -23,11 +23,13 @@ from fontTools.subset import Subsetter, Options
 
 from .palt import bake, DEFAULT_FRACTIONS
 from .yakumono import add_kern_pairs, remove_features
+from . import glyphshift
 
 ROOT = Path(__file__).resolve().parent.parent
 NOTO = ROOT / 'sources' / 'NotoSansJP.ttf'
 OUTFIT = ROOT / 'sources' / 'Outfit.ttf'
 CACHE = ROOT / 'build' / 'cache'
+SHIFT_CONFIG = ROOT / 'config' / 'glyph-shifts.json'
 
 
 @dataclass
@@ -179,13 +181,27 @@ def merge(base: Path, sub: Path, wc: WeightConfig, cfg: TuningConfig,
 
 
 def build_weight(cfg: TuningConfig, weight: int, out_dir: Path,
-                 text: str | None = None, woff2: bool = False) -> Path:
-    """1ウェイト分を生成する。text を渡すとその文字だけのプレビュー用フォントになる。"""
+                 text: str | None = None, woff2: bool = False,
+                 shifts: dict | None = None) -> Path:
+    """1ウェイト分を生成する。text を渡すとその文字だけのプレビュー用フォントになる。
+
+    shifts は工程④（グリフ単位の垂直調整）。合成後に適用する。
+    """
     wc = cfg.weight(weight)
     base = prepare_base(wc.jaWght, cfg, text)
     sub = prepare_sub(text)
     stem = f'NotofitJP-{weight}'
     out_ttf = Path(out_dir) / f'{stem}.ttf'
     out_woff2 = Path(out_dir) / f'{stem}.woff2' if woff2 else None
-    merge(base, sub, wc, cfg, out_ttf, out_woff2)
+    merge(base, sub, wc, cfg, out_ttf, out_woff2 if not shifts else None)
+
+    if shifts:
+        # ④ は合成後に適用する。woff2 は調整後の中身から書き出す
+        font = TTFont(out_ttf)
+        glyphshift.apply(font, shifts)
+        font.save(out_ttf)
+        if out_woff2:
+            font.flavor = 'woff2'
+            font.save(out_woff2)
+        font.close()
     return out_woff2 or out_ttf

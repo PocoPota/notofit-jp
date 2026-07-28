@@ -18,8 +18,9 @@ from urllib.parse import urlparse, parse_qs
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 
-from .build import (ROOT, CACHE, TuningConfig, WeightConfig, YakumonoConfig,
-                    build_weight, _subset, _key, NOTO)
+from .build import (ROOT, CACHE, SHIFT_CONFIG, TuningConfig, WeightConfig,
+                    YakumonoConfig, build_weight, _subset, _key, NOTO)
+from . import glyphshift
 
 PORT = 8765
 TUNER = ROOT / 'tuner'
@@ -80,8 +81,14 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if url.path in ('/', '/index.html'):
                 return self._send(200, (TUNER / 'index.html').read_bytes(), 'text/html; charset=utf-8')
+            if url.path in ('/glyphs', '/glyphs.html'):
+                return self._send(200, (TUNER / 'glyphs.html').read_bytes(), 'text/html; charset=utf-8')
             if url.path == '/api/config':
                 return self._json(json.loads(CONFIG_PATH.read_text()))
+            if url.path == '/api/shifts':
+                return self._json(glyphshift.ShiftConfig.load(SHIFT_CONFIG).weights)
+            if url.path == '/api/metrics':
+                return self._json(self._metrics(q))
             if url.path == '/api/preview':
                 return self._send(200, self._preview(q), 'font/woff2')
             if url.path == '/api/reference':
@@ -101,6 +108,10 @@ class Handler(BaseHTTPRequestHandler):
             CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
             CONFIG_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n')
             return self._json({'saved': str(CONFIG_PATH)})
+        if url.path == '/api/shifts':
+            cfg = glyphshift.ShiftConfig(payload)
+            cfg.save(SHIFT_CONFIG)
+            return self._json({'saved': str(SHIFT_CONFIG)})
         self._send(404, b'not found', 'text/plain')
 
     def _preview(self, q) -> bytes:
@@ -126,9 +137,19 @@ class Handler(BaseHTTPRequestHandler):
                 middle=int(q.get('kernMiddle', ['-500'])[0]),
             ),
         )
+        shifts = json.loads(q.get('shifts', ['{}'])[0])
         with _lock, tempfile.TemporaryDirectory() as tmp:
-            path = build_weight(cfg, weight, Path(tmp), text=text, woff2=True)
+            path = build_weight(cfg, weight, Path(tmp), text=text, woff2=True, shifts=shifts)
             return path.read_bytes()
+
+    def _metrics(self, q) -> dict:
+        """基準線を引くための字面の位置。調整前の合成フォントから測る。"""
+        weight = int(q.get('weight', ['400'])[0])
+        chars = q.get('chars', [''])[0]
+        cfg = TuningConfig.load(CONFIG_PATH)
+        with _lock, tempfile.TemporaryDirectory() as tmp:
+            path = build_weight(cfg, weight, Path(tmp), text=chars)
+            return glyphshift.measure(TTFont(path), chars)
 
 
 def main():

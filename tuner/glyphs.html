@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notofit JP グリフ垂直調整</title>
+<style>
+  :root {
+    --bg: #14161a; --panel: #1c1f25; --line: #2c313a; --fg: #e6e9ef;
+    --dim: #8a93a3; --accent: #6ea8fe; --before: #ff6b8a;
+    --guide-x: #38bdf8; --guide-cap: #a78bfa; --guide-ja: #f59e0b;
+    --preview-bg: #fbfbfd; --preview-fg: #16181d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 13px/1.6 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    height: 100vh; overflow: hidden;
+  }
+  .app { display: grid; grid-template-columns: 300px 1fr; height: 100vh; }
+  aside { background: var(--panel); border-right: 1px solid var(--line); overflow-y: auto; padding: 16px; }
+  h1 { font-size: 13px; margin: 0 0 4px; }
+  .sub { color: var(--dim); font-size: 11px; margin-bottom: 14px; }
+  .sub a { color: var(--accent); }
+  section { border-top: 1px solid var(--line); padding: 13px 0; }
+  section:first-of-type { border-top: 0; padding-top: 0; }
+  h2 { font-size: 10px; text-transform: uppercase; letter-spacing: .1em; color: var(--dim); margin: 0 0 9px; font-weight: 600; }
+
+  .tabs { display: flex; gap: 6px; }
+  .tabs button {
+    flex: 1; padding: 7px; background: transparent; color: var(--dim);
+    border: 1px solid var(--line); border-radius: 6px; cursor: pointer; font-size: 12px;
+  }
+  .tabs button.on { background: var(--accent); border-color: var(--accent); color: #0d1117; font-weight: 600; }
+
+  /* グリフ一覧。調整済みのものが一目で分かるようにする */
+  .glyphs { display: flex; flex-wrap: wrap; gap: 5px; }
+  .glyphs button {
+    width: 40px; height: 44px; background: transparent; border: 1px solid var(--line);
+    border-radius: 6px; cursor: pointer; color: var(--fg); position: relative;
+    font: 17px/1 -apple-system, sans-serif; padding: 0;
+  }
+  .glyphs button.on { border-color: var(--accent); background: #23324d; }
+  .glyphs button .dy {
+    position: absolute; left: 0; right: 0; bottom: 3px;
+    font: 600 9px/1 ui-monospace, Menlo, monospace; color: var(--accent);
+  }
+  .glyphs button.zero .dy { color: #4b5563; }
+
+  .field { margin-bottom: 11px; }
+  .field label { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+  .field .name { font-size: 11px; }
+  .field .val {
+    font: 600 12px/1 ui-monospace, Menlo, monospace; color: var(--accent);
+    background: #0f1116; padding: 3px 6px; border-radius: 4px;
+  }
+  .hint { font-size: 10px; color: var(--dim); margin-top: 5px; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  input[type=text] {
+    width: 100%; background: #0f1116; color: var(--fg); border: 1px solid var(--line);
+    border-radius: 5px; padding: 6px 8px; font-size: 13px;
+  }
+
+  .snap { display: flex; flex-direction: column; gap: 5px; }
+  .snap button {
+    text-align: left; padding: 7px 9px; background: transparent; color: var(--fg);
+    border: 1px solid var(--line); border-radius: 5px; cursor: pointer; font-size: 11px;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .snap button:hover { border-color: var(--accent); }
+  .snap button span { font: 600 11px/1 ui-monospace, Menlo, monospace; color: var(--dim); }
+  .snap button.x span { color: var(--guide-x); }
+  .snap button.cap span { color: var(--guide-cap); }
+  .snap button.ja span { color: var(--guide-ja); }
+
+  .row { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; font-size: 11px; }
+  .row input[type=checkbox] { accent-color: var(--accent); }
+  .swatch { width: 10px; height: 2px; border-radius: 1px; display: inline-block; }
+
+  .actions { display: flex; gap: 7px; }
+  .actions button {
+    flex: 1; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 11px;
+    border: 1px solid var(--line); background: transparent; color: var(--fg);
+  }
+  .actions button.primary { background: var(--accent); border-color: var(--accent); color: #0d1117; font-weight: 600; }
+  #status { font-size: 10px; color: var(--dim); margin-top: 8px; min-height: 1.4em; }
+  #status.err { color: var(--before); }
+
+  main { overflow-y: auto; background: var(--preview-bg); color: var(--preview-fg); }
+  .specimen { border-bottom: 1px solid #e6e8ee; padding: 18px 24px; }
+  .specimen h3 {
+    font: 600 9px/1 -apple-system, sans-serif; letter-spacing: .12em; text-transform: uppercase;
+    color: #a3a9b8; margin: 0 0 14px;
+  }
+  .sample {
+    font-family: var(--preview-font), sans-serif;
+    text-autospace: normal; margin: 0; white-space: nowrap;
+  }
+  .before { font-family: var(--before-font), sans-serif; color: var(--before); }
+  .guide { z-index: 2; }
+
+  /* 基準線を字面の高さに引く。ベースラインは probe で実測して求める */
+  .stage { position: relative; overflow-x: auto; padding: 6px 0; }
+  .guide { position: absolute; left: 0; right: 0; border-top: 1px dashed; pointer-events: none; }
+  .guide.x { border-color: var(--guide-x); }
+  .guide.cap { border-color: var(--guide-cap); }
+  .guide.ja { border-color: var(--guide-ja); }
+  .guide.base { border-color: #cbd5e1; border-top-style: solid; }
+  /* 基準線が近いとラベルが重なるため、種類ごとに横位置をずらす */
+  .guide b {
+    position: absolute; top: -12px; font: 600 9px/1 ui-monospace, Menlo, monospace;
+    letter-spacing: .05em; background: var(--preview-bg); padding: 0 4px;
+  }
+  .guide.base b { right: 4px; }
+  .guide.x b { right: 116px; }
+  .guide.cap b { right: 232px; }
+  .guide.ja b { right: 356px; }
+  .guide.x b { color: var(--guide-x); }
+  .guide.cap b { color: var(--guide-cap); }
+  .guide.ja b { color: var(--guide-ja); }
+  .guide.base b { color: #94a3b8; }
+  .probe { display: inline-block; width: 0; height: 0; vertical-align: baseline; }
+  .lbl { font: 600 9px/1 -apple-system, sans-serif; letter-spacing: .1em; color: #a3a9b8; margin: 12px 0 4px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1>Notofit JP グリフ垂直調整</h1>
+    <div class="sub">工程④。対象グリフだけを上下に動かす。<a href="/">和欧調整ツール →</a></div>
+
+    <section>
+      <h2>ウェイト</h2>
+      <div class="tabs" id="tabs"></div>
+    </section>
+
+    <section>
+      <h2>対象グリフ</h2>
+      <div class="glyphs" id="glyphs"></div>
+      <div class="field" style="margin-top:9px">
+        <input type="text" id="add" placeholder="文字を入力して追加（例 : ; ( ）" maxlength="4">
+        <div class="hint">数値は現在の移動量。0 は未調整</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>移動量</h2>
+      <div class="field">
+        <label><span class="name" id="target-name">—</span><span class="val" id="v-dy">0</span></label>
+        <input type="range" id="dy" min="-250" max="250" step="1" value="0">
+        <div class="hint">正で上へ。1000 upem 単位。矢印キーで 1 ずつ動く</div>
+      </div>
+      <div class="snap" id="snap"></div>
+    </section>
+
+    <section>
+      <h2>表示</h2>
+      <div class="row"><input type="checkbox" id="g-x" checked><label for="g-x"><span class="swatch" style="background:var(--guide-x)"></span> 欧文の x-height 中心</label></div>
+      <div class="row"><input type="checkbox" id="g-cap" checked><label for="g-cap"><span class="swatch" style="background:var(--guide-cap)"></span> 欧文の cap-height 中心</label></div>
+      <div class="row"><input type="checkbox" id="g-ja" checked><label for="g-ja"><span class="swatch" style="background:var(--guide-ja)"></span> 和文相当の中心</label></div>
+      <div class="row"><input type="checkbox" id="g-base" checked><label for="g-base"><span class="swatch" style="background:#cbd5e1"></span> ベースライン</label></div>
+      <div class="row"><input type="checkbox" id="show-before" checked><label for="show-before">調整前を重ねる</label></div>
+      <div class="field" style="margin-top:10px">
+        <label><span class="name">見本サイズ</span><span class="val" id="v-size">80px</span></label>
+        <input type="range" id="size" min="40" max="160" step="2" value="80">
+      </div>
+    </section>
+
+    <section>
+      <h2>設定</h2>
+      <div class="actions">
+        <button class="primary" id="save">保存</button>
+        <button id="reset">この文字を 0 に</button>
+      </div>
+      <div class="hint" style="margin-top:8px">保存先: config/glyph-shifts.json</div>
+      <div id="status"></div>
+    </section>
+  </aside>
+
+  <main>
+    <div class="specimen">
+      <h3>字面の位置（基準線つき）</h3>
+      <div id="stage-big"></div>
+    </div>
+    <div class="specimen">
+      <h3>文脈</h3>
+      <div id="stage-ctx"></div>
+    </div>
+    <div class="specimen">
+      <h3>本文 16px</h3>
+      <div id="stage-body"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+// 全角の対応がある文字。基準線と見比べのために使う
+const JA_PAIR = {
+  ':': '：', ';': '；', '(': '（', ')': '）', '?': '？', '!': '！',
+  ',': '、', '.': '。', '[': '［', ']': '］', '{': '｛', '}': '｝',
+  '"': '”', "'": '’', '/': '／', '~': '〜', '-': 'ー', '=': '＝',
+};
+const DEFAULT_GLYPHS = [':', ';', '(', ')', '?', '!', '[', ']', '{', '}', '"', "'", '*', '/'];
+
+const state = {
+  weights: [400, 700],
+  weight: 400,
+  shifts: {},        // { "400": { ":": 26 } }
+  glyphs: DEFAULT_GLYPHS.slice(),
+  target: ':',
+  size: 80,
+  guides: { x: true, cap: true, ja: true, base: true },
+  showBefore: true,
+  metrics: {},
+};
+let gen = 0, timer = null, loaded = [];
+
+const $ = (id) => document.getElementById(id);
+const shiftsOf = (w = state.weight) => (state.shifts[w] ||= {});
+const dyOf = (ch) => shiftsOf()[ch] || 0;
+const jaOf = (ch) => JA_PAIR[ch] || '';
+const sampleFor = (ch) => {
+  const ja = jaOf(ch);
+  return { big: `x${ch}H${ch}o`, ctx: `A${ch}B  12${ch}34  あ${ch}い` + (ja ? `  和文 ${ja}` : ''),
+           body: `午前 9${ch}30 から。ABC${ch}DEF、日本語${ch}英語の混植` };
+};
+const allText = () => state.glyphs.map((c) => sampleFor(c).big + sampleFor(c).ctx + sampleFor(c).body).join('')
+  + 'xHo0123456789あいう和文英語午前から。、混植' + Object.values(JA_PAIR).join('');
+
+function status(msg, err = false) {
+  $('status').textContent = msg;
+  $('status').className = err ? 'err' : '';
+}
+
+async function boot() {
+  const [cfg, shifts] = await Promise.all([
+    (await fetch('/api/config')).json(),
+    (await fetch('/api/shifts')).json(),
+  ]);
+  state.weights = cfg.weights.map((w) => w.weight);
+  state.weight = state.weights[0];
+  state.shifts = shifts || {};
+  // 保存済みの文字は一覧に足しておく
+  Object.values(state.shifts).forEach((m) => Object.keys(m).forEach((c) => {
+    if (!state.glyphs.includes(c)) state.glyphs.push(c);
+  }));
+  buildTabs(); buildGlyphs(); syncControls();
+  refresh();
+}
+
+function buildTabs() {
+  $('tabs').innerHTML = '';
+  state.weights.forEach((w) => {
+    const b = document.createElement('button');
+    b.textContent = w;
+    b.className = w === state.weight ? 'on' : '';
+    b.onclick = () => { state.weight = w; buildTabs(); buildGlyphs(); syncControls(); refresh(); };
+    $('tabs').appendChild(b);
+  });
+}
+
+function buildGlyphs() {
+  $('glyphs').innerHTML = '';
+  state.glyphs.forEach((ch) => {
+    const dy = dyOf(ch);
+    const b = document.createElement('button');
+    b.innerHTML = `${ch === '"' ? '&quot;' : ch}<span class="dy">${dy > 0 ? '+' : ''}${dy}</span>`;
+    b.className = (ch === state.target ? 'on ' : '') + (dy ? '' : 'zero');
+    b.onclick = () => { state.target = ch; buildGlyphs(); syncControls(); refresh(); };
+    $('glyphs').appendChild(b);
+  });
+}
+
+function syncControls() {
+  const ch = state.target, ja = jaOf(ch);
+  $('target-name').textContent = ja ? `${ch}（和文 ${ja}）` : ch;
+  $('dy').value = dyOf(ch);
+  $('v-dy').textContent = (dyOf(ch) > 0 ? '+' : '') + dyOf(ch);
+  $('v-size').textContent = state.size + 'px';
+  buildSnap();
+}
+
+/** 「どこに合わせるか」を1クリックで入れられるようにする。値は実測から計算する */
+function buildSnap() {
+  const host = $('snap');
+  host.innerHTML = '';
+  const ch = state.target, m = state.metrics;
+  const self = m[ch];
+  if (!self) return;
+  const targets = [];
+  if (m['x']) targets.push(['x-height の中心に合わせる', m['x'].center, 'x']);
+  if (m['H']) targets.push(['cap-height の中心に合わせる', m['H'].center, 'cap']);
+  const ja = jaOf(ch);
+  if (ja && m[ja]) targets.push([`和文 ${ja} の中心に合わせる`, m[ja].center, 'ja']);
+  targets.push(['調整なし（0 に戻す）', null, '']);
+  targets.forEach(([label, center, cls]) => {
+    const b = document.createElement('button');
+    b.className = cls;
+    // self.center は「調整前」の中心。そこから目標までの差が移動量になる
+    const dy = center === null ? 0 : Math.round(center - self.center);
+    b.innerHTML = `<span style="color:var(--fg)">${label}</span><span>${dy > 0 ? '+' : ''}${dy}</span>`;
+    b.onclick = () => { setDy(dy); };
+    host.appendChild(b);
+  });
+}
+
+function setDy(v) {
+  const ch = state.target;
+  if (v) shiftsOf()[ch] = v; else delete shiftsOf()[ch];
+  buildGlyphs(); syncControls(); schedule();
+}
+
+function schedule() { clearTimeout(timer); timer = setTimeout(refresh, 140); }
+
+async function loadFace(name, url) {
+  const buf = await (await fetch(url)).arrayBuffer();
+  const face = new FontFace(name, buf);
+  await face.load();
+  document.fonts.add(face);
+  loaded.push(face);
+  if (loaded.length > 10) document.fonts.delete(loaded.shift());
+  return name;
+}
+
+async function refresh() {
+  const id = ++gen, text = allText();
+  status('生成中…');
+  try {
+    const t0 = performance.now();
+    const q = (shifts) => '/api/preview?' + new URLSearchParams({
+      weight: state.weight, text, shifts: JSON.stringify(shifts),
+    });
+    const [after, before, metrics] = await Promise.all([
+      loadFace(`gs${id}`, q(shiftsOf())),
+      loadFace(`gb${id}`, q({})),
+      (await fetch('/api/metrics?' + new URLSearchParams({
+        weight: state.weight,
+        chars: [...new Set([...state.glyphs, ...Object.values(JA_PAIR), 'x', 'H'])].join(''),
+      }))).json(),
+    ]);
+    if (id !== gen) return;
+    state.metrics = metrics;
+    document.documentElement.style.setProperty('--preview-font', after);
+    document.documentElement.style.setProperty('--before-font', before);
+    buildSnap();
+    render();
+    status(`${Math.round(performance.now() - t0)}ms · ${state.weight} · ${Object.keys(shiftsOf()).length}字を調整中`);
+  } catch (e) {
+    status('エラー: ' + e.message, true);
+  }
+}
+
+/** 基準線つきの見本。ベースラインは probe の位置を実測して求める */
+function stage(el, text, px, withGuides) {
+  el.className = 'stage';
+  el.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.style.position = 'relative';
+
+  const line = document.createElement('p');
+  line.className = 'sample';
+  // 調整後を前面に置く。動いていないグリフは背面の「調整前」を覆い隠すので、
+  // ズレた箇所だけ赤がはみ出して見える
+  line.style.cssText = `font-size:${px}px;position:relative;z-index:1`;
+  const probe = document.createElement('span');
+  probe.className = 'probe';
+  line.appendChild(probe);
+  line.appendChild(document.createTextNode(text));
+  wrap.appendChild(line);
+
+  if (state.showBefore) {
+    const b = document.createElement('p');
+    b.className = 'sample before';
+    b.style.cssText = `font-size:${px}px;position:absolute;inset:0;z-index:0;pointer-events:none`;
+    b.textContent = text;
+    wrap.appendChild(b);
+  }
+  el.appendChild(wrap);
+  if (!withGuides) return;
+
+  // 実測したベースラインから、フォントユニットの位置を px に換算して線を引く
+  requestAnimationFrame(() => {
+    const base = probe.getBoundingClientRect().top - wrap.getBoundingClientRect().top;
+    const put = (units, cls, label) => {
+      const g = document.createElement('div');
+      g.className = 'guide ' + cls;
+      g.style.top = (base - (units / 1000) * px) + 'px';
+      g.innerHTML = `<b>${label}</b>`;
+      wrap.appendChild(g);
+    };
+    const m = state.metrics, ja = jaOf(state.target);
+    if (state.guides.base) put(0, 'base', 'ベースライン');
+    if (state.guides.x && m['x']) put(m['x'].center, 'x', `x 中心 ${Math.round(m['x'].center)}`);
+    if (state.guides.cap && m['H']) put(m['H'].center, 'cap', `cap 中心 ${Math.round(m['H'].center)}`);
+    if (state.guides.ja && ja && m[ja]) put(m[ja].center, 'ja', `和文 ${ja} 中心 ${Math.round(m[ja].center)}`);
+  });
+}
+
+function render() {
+  const s = sampleFor(state.target);
+  stage($('stage-big'), s.big, state.size, true);
+  stage($('stage-ctx'), s.ctx, Math.round(state.size * 0.55), false);
+  stage($('stage-body'), s.body, 16, false);
+}
+
+$('dy').addEventListener('input', (e) => setDy(parseInt(e.target.value, 10)));
+$('size').addEventListener('input', (e) => { state.size = +e.target.value; syncControls(); render(); });
+$('add').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  const ch = e.target.value.trim()[0];
+  if (!ch) return;
+  if (!state.glyphs.includes(ch)) state.glyphs.push(ch);
+  state.target = ch;
+  e.target.value = '';
+  buildGlyphs(); syncControls(); refresh();
+});
+['x', 'cap', 'ja', 'base'].forEach((k) => {
+  $('g-' + k).addEventListener('change', (e) => { state.guides[k] = e.target.checked; render(); });
+});
+$('show-before').addEventListener('change', (e) => { state.showBefore = e.target.checked; render(); });
+$('reset').onclick = () => setDy(0);
+$('save').onclick = async () => {
+  const body = {};
+  Object.entries(state.shifts).forEach(([w, m]) => {
+    const kept = Object.fromEntries(Object.entries(m).filter(([, v]) => v));
+    if (Object.keys(kept).length) body[w] = kept;
+  });
+  const r = await fetch('/api/shifts', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  });
+  status((await r.json()).saved ? '保存しました' : '保存に失敗');
+};
+
+boot();
+</script>
+</body>
+</html>
