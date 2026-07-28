@@ -17,6 +17,7 @@ Noto Sans JP と一致する。
 | [docs/proportional.md](docs/proportional.md) | かな・全角英数の字幅のプロポーショナル化 |
 | [docs/glyph-vertical.md](docs/glyph-vertical.md) | グリフ単位の垂直調整 |
 | [docs/tuner.md](docs/tuner.md) | 和欧調整ツールの仕様 |
+| [docs/css-guide.md](docs/css-guide.md) | 利用側の CSS の推奨・非推奨（暫定） |
 | [docs/notes/](docs/notes/) | 調査メモ（ツール構成、M1 の検証、`palt` の境界） |
 
 ## 開発
