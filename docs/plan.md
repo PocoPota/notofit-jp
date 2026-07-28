@@ -114,6 +114,32 @@ cap-height に合わせて縮小する）とは基準が逆になる。本プロ
 | `README.md`      | 出自・派生関係の明記、CSS の推奨・非推奨（→ [css-guide.md](css-guide.md)） |
 | ビルドスクリプト | 各工程を再実行可能な形で                  |
 
+### 3.4 配布
+
+**npm パッケージとして公開する。**
+
+| 項目 | 内容 |
+| ---- | ---- |
+| 形式 | npm パッケージ。`dist/` の woff2 と CSS を同梱する |
+| CDN | npm に公開すれば jsDelivr / unpkg から配信されるため、別途用意しない |
+| GitHub Release | 併用するかは後で判断する |
+| ライセンス | `OFL.txt` を同梱する |
+
+**サンプルと使い方を載せた Web ページも用意する。** 実物を見せられる場と、CSS の書き方
+（→ [css-guide.md](css-guide.md)）の案内を兼ねる。`dist/` をそのまま読み込めばよいため
+GitHub Pages で足りる。時期は配布準備以降とし、公開そのものはブロックしない。
+
+利用側は CSS を読み込む形を想定する。パスの解決はバンドラに任せるため、工程⑥ が出力する
+`@font-face` の `src` はパッケージ内の相対パスとする。
+
+```
+notofit-jp/
+├── notofit-jp.css     @font-face（スライス × ウェイト）
+├── w/*.woff2          サブセット済みフォント
+├── OFL.txt
+└── README.md          出自・派生関係、CSS の推奨と非推奨
+```
+
 ---
 
 ## 4. アーキテクチャ
@@ -196,7 +222,7 @@ CSS 上の `font-weight` は、いずれもラウンドな値で宣言する。
 | ベースライン | 欧文を `BASELINE_OFFSET` だけ移動し、和文と光学的に揃える                |
 | 縦メトリクス | hhea / OS/2 を Noto Sans JP 側に固定し、既定の行の高さを一致させる       |
 | 字送り       | 和文の advance には手を入れない（②の処理を除く）                         |
-| 欧文の重複   | Noto Sans JP 自身が持つ欧文は Outfit で上書きする。CJK の字形を残したい記号のみ個別に除外する |
+| 欧文の重複   | Noto Sans JP 自身が持つ欧文は Outfit で上書きする。**記号もすべて Outfit を採用する** |
 
 ①の静的インスタンス化のうち欧文側はこの工程に統合する（合成ツールがインスタンス化を
 内蔵するため、中間ファイルを介さない）。和文側は②の前に静的化しておく必要がある。
@@ -206,6 +232,10 @@ CSS 上の `font-weight` は、いずれもラウンドな値で宣言する。
 同種の実装である Gen Interface JP は欧文（Inter）を基準に和文を縮小しているが、本
 プロジェクトは基準が逆であるため、設計値は流用せず Outfit と Noto の cap-height /
 x-height 比から算出し直す。
+
+`excludeCodepoints`（CJK 側の字形を残す符号位置）は**空とする**。`①` `※` `℃` のような記号を
+CJK の慣習に寄せる選択肢はあるが、まず Outfit を全面的に採用し、必要が生じた時点で
+個別に対応する。
 
 置き換え互換性の観点から、縦メトリクスと和文の字送りを変えないことを最優先とする。
 `font-family` の差し替えのみで既存サイトの行送りや折り返し位置が変わらないことを、
@@ -242,6 +272,11 @@ Google のスライシング手法は、使用頻度上位の文字群を等分�
 サブセット化の指定次第で layout feature が脱落しうるため、生成後に保持を検証する工程を
 設ける。
 
+**name テーブルは著作権（nameID 0）とライセンス URL（14）を残し、ライセンス全文（13）は
+落とす。** Google Fonts が配信しているスライスと同じ構成にする。`pyftsubset` の既定は
+0〜6 のみを残すため、14 は明示的に指定する必要がある。理由と各実装の比較は
+[notes/name-table.md](notes/name-table.md)。
+
 #### ⑥ CSS 生成
 
 スライスとウェイトの組み合わせごとに `@font-face` を出力する。合成済みであるため
@@ -262,7 +297,7 @@ Noto Sans JP の Google Fonts 版 CSS と同じ `unicode-range` の区切り・�
 | M3 | 単一ウェイトの完成 | ①〜⑥ を通して1ウェイト分を生成し、3エンジンで横書き表示を確認        |
 | M4 | 置き換え互換性の確認 | Noto Sans JP 採用ページで差し替え、行送りの一致と、折り返し位置の変化量が想定内であることを確認 |
 | M5 | 全ウェイト展開     | 決定したウェイト数でビルドを自動化                                   |
-| M6 | 配布準備           | OFL.txt 同梱、README への出自明記と CSS の推奨・非推奨、著作権表示の確認 |
+| M6 | 配布準備           | npm パッケージ化、OFL.txt 同梱、README（出自・デザイナーのクレジット・CSS の推奨と非推奨）、name テーブルの確認 |
 
 M1 は他のすべての工程の前提となるため最初に着手する。
 
@@ -287,9 +322,9 @@ M1 は他のすべての工程の前提となるため最初に着手する。
 | 2 | 欧文の `wght` インスタンス化値 | 和文と見かけの太さが揃う位置（和文は 400 / 700 で固定） |
 | 3 | 約物の `kern` の値          | 隣接時に引く量。既定 −500 は JLREQ 由来                  |
 | 4 | かな・全角英数をプロポーショナル化するか | する / しない の2択。字送りの変化量で判断     |
-| 5 | `excludeCodepoints` の対象  | CJK の字形を残す記号の選定                              |
+| 5 | ~~`excludeCodepoints` の対象~~ | **確定: 空**。記号はすべて Outfit を採用する（→ 4.2 ③） |
 | 6 | グリフ単位の垂直調整の対象と値 | Outfit のコロン類ほか。何に合わせるかを含む（→ [glyph-vertical.md](glyph-vertical.md)） |
-| 7 | `metadataMode`              | name テーブルの識別情報をどう構成するか                 |
+| 7 | ~~`metadataMode`~~          | **確定: `merge`**。独自の名前を持つ派生物であるため（→ 8章） |
 
 ---
 
@@ -337,7 +372,9 @@ CSS の `text-autospace: normal` に委ね、フォントには含めない。3�
 
 - `OFL.txt` を同梱し、OFL 1.1 で配布する
 - 名称に `Source` を含めない
-- Adobe / Google / The Outfit Project Authors の著作権表示を残す
+- 元フォントの著作権表示を残す。**Noto Sans JP の著作権表示は Adobe のみ**
+  （Source Han Sans 由来）で、Google の表示は元から存在しない。Outfit は
+  The Outfit Project Authors
 
 ---
 
@@ -349,6 +386,7 @@ CSS の `text-autospace: normal` に委ね、フォントには含めない。3�
 - [proportional.md](proportional.md) — かな・全角英数の字幅のプロポーショナル化
 - [glyph-vertical.md](glyph-vertical.md) — グリフ単位の垂直調整と、その調整ツール
 - [css-guide.md](css-guide.md) — 利用側の CSS の推奨・非推奨（配布時の README の下書き）
+- [notes/name-table.md](notes/name-table.md) — 配布フォントの name テーブルに何を残すか
 - [tuner.md](tuner.md) — 和欧調整ツール（開発支援 GUI）の仕様
 - [notes/tools.md](notes/tools.md) — 使用ツールの調査メモ
 - [notes/m1-merge.md](notes/m1-merge.md) — M1 合成の実現性検証の結果
