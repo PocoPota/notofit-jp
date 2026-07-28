@@ -26,6 +26,7 @@ for wght in (400, 700):
     b = bake(font, DEFAULT_FRACTIONS)
     n = add_kern_pairs(font)
     r = remove_features(font, ('halt', 'vhal', 'vpal', 'vkrn'))
+    # palt は本番では削除するが、このテストは焼き込みの効きを見るため残す
     w = shaper(font)
     print(f'  焼込={b}グリフ kernペア={n}組 削除feature={r}件')
 
@@ -58,7 +59,6 @@ for wght in (400, 700):
     for tag in ('halt', 'vhal', 'vpal', 'vkrn'):
         check(f'{tag} が無い', tag not in feats)
     check('kern は残る', 'kern' in feats)
-    check('palt は残る', 'palt' in feats)
     check('vert は残る（字形切替）', 'vert' in feats)
     check('halt 指定は無効', abs(w('」「', {'halt': True}) - w('」「')) < 0.001,
           f'{w("」「", {"halt": True}):.3f}em')

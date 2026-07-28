@@ -42,9 +42,12 @@ class WeightConfig:
     baselineOffset: int = 0  # 欧文の上下位置（フォントユニット）
 
 
-#: 削除する feature。halt は Chromium の text-spacing-trim が使い kern と二重適用に
-#: なるため。vhal / vpal / vkrn は横書き限定の方針により不要。
-DROP_FEATURES = ('halt', 'vhal', 'vpal', 'vkrn')
+#: 合成前に削除する feature。いずれも「CSS で指定されると意図しない字送りになる」もの。
+#: palt — 焼き込み済み。約物には残っており、指定されると kern と二重適用になる
+#: halt — Chromium の text-spacing-trim が使い、同じく kern と二重適用になる
+#: vhal / vpal / vkrn — 横書き限定の方針により不要
+#: 削除は焼き込み（palt を読む）と kern の追加より後に行う。
+DROP_FEATURES = ('palt', 'halt', 'vhal', 'vpal', 'vkrn')
 
 
 @dataclass

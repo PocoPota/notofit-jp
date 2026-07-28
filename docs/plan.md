@@ -95,15 +95,14 @@ cap-height に合わせて縮小する）とは基準が逆になる。本プロ
 
 | 項目               | 判断                                                                  |
 | ------------------ | --------------------------------------------------------------------- |
-| 縦組み             | 横書きのみ対応。縦組み用の feature は調整せず、`vhal` / `vpal` / `vkrn` は削除する |
+| 縦組み             | 横書きのみ対応。縦組み用の feature は調整せず、`vhal` / `vpal` / `vkrn` は削除する（→ 4.2 ②） |
 | 印刷・アプリ用途   | Web 配信（woff2）に絞る。ヒンティングや OTF/TTF での配布は扱わない      |
 | 和欧間のアキ       | CSS の `text-autospace` に委ねる（→ 6）                                |
 | `chws` の実装      | 実装済みブラウザが限られ、実効性がないため不採用（→ [yakumono.md](yakumono.md)） |
 | 可変フォント出力   | 合成方式の帰結として静的のみとする                                     |
 
-`halt` は横書きに影響する（Chromium の `text-spacing-trim` が使う）ため削除する。それに
-合わせ、対になる縦組み用の `vhal` / `vpal` / `vkrn` もまとめて削除する。字形を切り替える
-`vert` / `vrt2` は字送りに影響しないため残す。詳細は [yakumono.md](yakumono.md)。
+削除する feature の一覧と理由は 4.2 の工程②。字形を切り替える `vert` / `vrt2` は字送りに
+影響しないため残す。
 
 ### 3.3 成果物
 
@@ -112,7 +111,7 @@ cap-height に合わせて縮小する）とは基準が逆になる。本プロ
 | `dist/*.woff2`   | サブセット済みフォント（スライス × ウェイト数） |
 | `dist/*.css`     | `@font-face` 宣言                         |
 | `OFL.txt`        | ライセンス全文                            |
-| `README.md`      | 出自・派生関係の明記                      |
+| `README.md`      | 出自・派生関係の明記、CSS の推奨・非推奨（→ [css-guide.md](css-guide.md)） |
 | ビルドスクリプト | 各工程を再実行可能な形で                  |
 
 ---
@@ -166,17 +165,26 @@ CSS 上の `font-weight` は、いずれもラウンドな値で宣言する。
 取り除く。単独の約物は全角ベタが JLREQ どおり正しいため、詰める必要があるのは隣接時だけで
 ある。`kern` は `font-kerning: auto` が既定であり、CSS の指定なしに全ブラウザで効く。
 
-あわせて `halt` を削除する。残すと Chromium が `text-spacing-trim` で上乗せし二重適用に
-なるため。現行の Chromium は `halt` も `chws` も持たないフォントでは `text-spacing-trim`
-を適用しない（仕様上の要件ではない。→ [yakumono.md](yakumono.md)）。
-
 **かな・全角英数** — `palt` を焼き込んでプロポーショナル化しうる。調整量を `hmtx` と
 アウトラインに恒久的に書き込む。字面は締まるが字送りが変わるため、**採否は M2 で決める**
 （既定は焼き込む側。→ [proportional.md](proportional.md)）。
 
-同種の目的を持つ `chws` は採用しない。仕様上は JLREQ 相当を実装していないエンジンが
-既定で有効にすべき feature だが、実際に適用されるのは Chromium 系に限られ、WebKit /
-Gecko では効かない。
+**feature の削除** — 処理を終えたあと、次の feature を削除する。いずれも
+**CSS で指定されると意図しない字送りになる**もので、方針4（フォント側で確定し、CSS に
+依存しない）を守るには残せない。
+
+| feature | 削除する理由 |
+| ------- | ------------ |
+| `palt` | 焼き込み済み。約物には値が残っており、指定されると `kern` の調整と二重にかかって約物が潰れる |
+| `halt` | Chromium の `text-spacing-trim` が使う。同じく `kern` と二重適用になる |
+| `vhal` / `vpal` / `vkrn` | 縦組み用。横書き限定の方針により不要 |
+
+削除は焼き込み（`palt` の値を読む）と `kern` の追加より後に行う。字形を切り替える
+`vert` / `vrt2` は字送りに影響しないため残す。
+
+約物の処理という同じ目的を持つ `chws` は、そもそも実装しない。仕様上は JLREQ 相当を
+実装していないエンジンが既定で有効にすべき feature だが、実際に適用されるのは Chromium 系に
+限られ、WebKit / Gecko では効かないため。
 
 #### ③ 合成
 
@@ -254,7 +262,7 @@ Noto Sans JP の Google Fonts 版 CSS と同じ `unicode-range` の区切り・�
 | M3 | 単一ウェイトの完成 | ①〜⑥ を通して1ウェイト分を生成し、3エンジンで横書き表示を確認        |
 | M4 | 置き換え互換性の確認 | Noto Sans JP 採用ページで差し替え、行送りの一致と、折り返し位置の変化量が想定内であることを確認 |
 | M5 | 全ウェイト展開     | 決定したウェイト数でビルドを自動化                                   |
-| M6 | 配布準備           | OFL.txt 同梱、README への出自明記、著作権表示の確認                  |
+| M6 | 配布準備           | OFL.txt 同梱、README への出自明記と CSS の推奨・非推奨、著作権表示の確認 |
 
 M1 は他のすべての工程の前提となるため最初に着手する。
 
@@ -340,6 +348,7 @@ CSS の `text-autospace: normal` に委ね、フォントには含めない。3�
 - [yakumono.md](yakumono.md) — 約物の処理と、不採用とした案
 - [proportional.md](proportional.md) — かな・全角英数の字幅のプロポーショナル化
 - [glyph-vertical.md](glyph-vertical.md) — グリフ単位の垂直調整と、その調整ツール
+- [css-guide.md](css-guide.md) — 利用側の CSS の推奨・非推奨（配布時の README の下書き）
 - [tuner.md](tuner.md) — 和欧調整ツール（開発支援 GUI）の仕様
 - [notes/tools.md](notes/tools.md) — 使用ツールの調査メモ
 - [notes/m1-merge.md](notes/m1-merge.md) — M1 合成の実現性検証の結果
