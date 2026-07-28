@@ -1,9 +1,9 @@
 # ツール調査メモ
 
-調査日: 2026-07-27
+最終更新: 2026-07-28
 
-Notofit JP のビルドに使用しうるツールの調査結果。採用の最終判断は M1 の検証結果による。
-計画書は [../plan.md](../plan.md)。
+Notofit JP のビルドに使うツールと、その役割。**構成は M1 で確定した**（検証の詳細は
+[m1-merge.md](m1-merge.md)）。計画書は [../plan.md](../plan.md)。
 
 ---
 
@@ -37,21 +37,25 @@ Notofit JP のビルドに使用しうるツールの調査結果。採用の最
 
 出力は `.otf` / `.ttf` / `.woff2`。可変フォントの静的インスタンス出力にも対応する。
 
+**使い方**
+
+インストール名と import 名が異なる。パッケージは `ofl-font-baker`、モジュールは
+`merge_fonts`。設定 JSON を stdin に渡す CLI（`ofl-font-baker`）としても、
+`merge_fonts.main()` を呼ぶライブラリとしても使える。本プロジェクトは後者
+（`notofit/build.py`）。
+
 **注意点**
 
-- 入力フォントの name テーブルに OFL のライセンス文字列がないと読み込みが失敗する
-  （両ソースとも OFL のため問題ないと見込まれるが、未確認）
-- API の関数・クラス名、対応 Python バージョンは未確認。PyPI ページが取得できなかった
-  ため、実際に導入して確認する
-- ② `palt` の焼き込みと ④ グリフ単位の垂直調整は守備範囲外。自前で fontTools を使う
+- 入力フォントの name テーブルに OFL のライセンス文字列が必要。Noto Sans JP / Outfit とも
+  nameID 13 に保持しており問題ない（M1 で確認）
+- ② 約物の `kern` 調整・`palt` の焼き込み・feature の削除と、④ グリフ単位の垂直調整は
+  守備範囲外。自前で fontTools を使う
 
-### 代替案: fontTools の merge を自前で使う
+### 検討した代替案: fontTools の merge を自前で使う
 
 `fontTools.merge` でマージ処理を自作する選択肢。全面的に制御できるが、グリフ名衝突と
-GSUB/GPOS の統合を自力で解く必要があり、M1 が重くなる。
-
-**方針: まず ofl-font-baker を試す。** 設計が方針2と一致しており、合わなければ自前実装に
-落とせばよい。逆順より手戻りが小さい。
+GSUB/GPOS の統合を自力で解く必要がある。**M1 で ofl-font-baker が破綻なく通ったため不要
+になった。**
 
 ---
 
@@ -64,14 +68,17 @@ GSUB/GPOS の統合を自力で解く必要があり、M1 が重くなる。
 | 用途                   | モジュール                               |
 | ---------------------- | ---------------------------------------- |
 | ① 静的インスタンス化   | `varLib.instancer`                       |
-| ② `palt` 焼き込み      | `ttLib`（GPOS / hmtx / glyf の直接編集） |
+| ② 約物の `kern`        | `otlLib.builder`（クラスベース PairPos の生成）  |
+| ② `palt` 焼き込み      | `ttLib`（GPOS / hmtx / glyf の直接編集）         |
+| ② feature の削除       | `ttLib`（FeatureList と LangSys の張り替え）     |
 | ④ グリフ単位の垂直調整 | `ttLib`（glyf の直接編集）               |
 | ⑤ サブセット化         | `subset` / `pyftsubset`                  |
 | woff2 出力             | `ttLib.woff2`（brotli 経由）             |
 
 ### brotli
 
-woff2 圧縮。`fonttools[woff2]` で同時に入る。
+woff2 圧縮。**個別に導入する必要がある**（fontTools 4.63 に `woff2` extra は存在せず、
+`fonttools[woff2]` を指定しても警告が出るだけで入らない）。
 
 ---
 
@@ -82,26 +89,43 @@ woff2 圧縮。`fonttools[woff2]` で同時に入る。
 シェイピング結果をプログラムから検証する。焼き込み後の advance が意図どおりか、feature が
 生きているかを、ブラウザを開かずに確認できる。② と ⑤ の検証工程の実体になる。
 
-### pytest
+### テストスクリプト
 
-設計値と出力の回帰テスト。M4 の置き換え互換性（行送り・字送りが Noto Sans JP と一致
-するか）は目視ではなく数値の assert にできる部分が多いため、早い段階から入れる価値がある。
+`tests/*.py` は**単体で実行できるスクリプト**として書いている。結果を表で表示し、失敗が
+あれば終了コード 1 を返す。
 
-### Playwright（任意）
+```bash
+.venv/bin/python tests/test_yakumono.py
+```
 
-M3 / M4 の3エンジン確認を自動化する場合に使う。Chromium / WebKit / Firefox を1つの API で
-回せる。手動確認でも足りるが、ウェイトを増やすと効いてくる。
+pytest はまだ導入していない。数が増えて一括実行が要るようになった段階で検討する。M4 の
+置き換え互換性（行送り・字送りが Noto Sans JP と一致するか）は数値の assert にできる部分が
+多いため、そこが導入の目安になる。
+
+### Playwright
+
+**導入済み**（Chromium のみ）。調整ツールの描画確認と、ブラウザ上での字送りの実測に使う。
+`text-spacing-trim` のようにブラウザでしか再現しない挙動は、HarfBuzz では確認できない。
+
+M3 / M4 の3エンジン確認にも使える（WebKit / Firefox は必要になった時点で追加導入する）。
 
 ---
 
-## 4. 構成案
+## 4. 構成
 
 ```
-Python 3.11+ / uv または venv
-├── fonttools[woff2]     ①⑤ + ②④ の自前処理
-├── ofl-font-baker       ③ 合成
-├── uharfbuzz            検証
-└── pytest               回帰テスト
+Python 3.13 / venv
+├── fonttools 4.63       ①⑤ + ②④ の自前処理
+├── brotli               woff2 圧縮（個別に入れる）
+├── ofl-font-baker 0.4.8 ③ 合成
+├── uharfbuzz            シェイピングの検証
+└── playwright           ブラウザ上での描画・字送りの検証
+```
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install fonttools brotli ofl-font-baker uharfbuzz playwright
+.venv/bin/python -m playwright install chromium
 ```
 
 Node 側は現時点で不要。成果物は woff2 と CSS であり、デモサイトを作る段階になったら

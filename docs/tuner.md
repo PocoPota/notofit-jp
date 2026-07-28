@@ -28,6 +28,39 @@ Notofit JP の設計値を目視で決めるための開発支援ツール（GUI
 ツールが出力した値を合成ツールの config に流し込む形とし、責務を重ねない。ツールを
 経由しなくてもビルドは回る状態を保つ。
 
+### 設定の形（`config/tuning.json`）
+
+以下は構造と初期値を示す例。実際のファイルは調整の結果で書き換わる。
+
+```jsonc
+{
+  "weights": [                    // 出力ウェイトごと。将来の追加はここに足すだけ
+    {
+      "weight": 400,              // CSS 上の font-weight
+      "jaWght": 400,              // 和文のインスタンス化値。置き換え互換性のため固定
+      "latinWght": 400,           // 欧文のインスタンス化値。見かけの太さを揃える
+      "scale": 1.0,               // 欧文の拡縮
+      "baselineOffset": 0         // 欧文の上下位置（1000 upem 単位、正で上）
+    }
+  ],
+  "paltFractions": {              // palt の焼き込み比率（表示条件。→ 4）
+    "kana": 1.0,
+    "latin": 1.0,                 // 全角英字・全角数字
+    "yakumono": 0.0,              // 全角のまま。隣接処理は kern が担う
+    "other": 0.0
+  },
+  "yakumono": {                   // 約物の kern。負で詰まる（→ yakumono.md）
+    "pair": -500,                 // 括弧・句読点どうし
+    "middle": -500                // 中点がらみ
+  },
+  "excludeCodepoints": [],        // CJK の字形を残す符号位置。GUI の範囲外
+  "familyName": "Notofit JP"
+}
+```
+
+読み書きは `notofit.build.TuningConfig`。GUI を使わずこのファイルを直接編集しても同じ
+結果になる。
+
 ## 3. 担当範囲
 
 **原則: 目視でしか決められない値を扱う。数値的な制約が判断を支配する値は扱わない。**
@@ -102,11 +135,12 @@ Notofit JP の設計値を目視で決めるための開発支援ツール（GUI
 見たものと配布物が食い違わない」を担保する。
 
 ```
-tuner/index.html   GUI（単一ファイル）
-notofit/server.py  ローカルサーバ
-notofit/build.py   ビルドコア（プレビューと本番で共用）
-notofit/palt.py    palt の焼き込み
-config/tuning.json 調整結果
+tuner/index.html     GUI（単一ファイル）
+notofit/server.py    ローカルサーバ
+notofit/build.py     ビルドコア（プレビューと本番で共用）
+notofit/palt.py      palt の焼き込み
+notofit/yakumono.py  約物の kern ペア調整と feature の削除
+config/tuning.json   調整結果
 ```
 
 ### 起動
@@ -121,8 +155,9 @@ config/tuning.json 調整結果
 かかるが、この経路なら**パラメータ変更あたり 0.03〜0.3 秒**で、スライダー操作に追従する。
 工程⑤のサブセット化を前倒しで使っているだけで、本番と別の処理をしているわけではない。
 
-中間生成物は `build/cache/` にキャッシュする。`palt` 比率とサンプル文章が変わったときだけ
-和文側を作り直す。
+中間生成物は `build/cache/` にキャッシュする。和文側を作り直すのは、工程②に関わる値
+（`palt` の比率、`kern` の値）とサンプル文章が変わったときだけ。`SCALE` /
+`BASELINE_OFFSET` / 欧文の `wght` を動かしても和文側は再利用される。
 
 ### 比較表示
 

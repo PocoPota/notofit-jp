@@ -192,7 +192,7 @@ Gecko では効かない。
 ①の静的インスタンス化のうち欧文側はこの工程に統合する（合成ツールがインスタンス化を
 内蔵するため、中間ファイルを介さない）。和文側は②の前に静的化しておく必要がある。
 `palt` が `FeatureVariations` によりウェイトで内容を変えるため、可変のまま焼き込むと
-どのウェイトの値を焼いたのかが曖昧になる（[notes/palt-featurevariations.md](notes/palt-featurevariations.md)）。
+どのウェイトの値を焼いたのかが曖昧になる（[notes/palt-weight-boundary.md](notes/palt-weight-boundary.md)）。
 
 同種の実装である Gen Interface JP は欧文（Inter）を基準に和文を縮小しているが、本
 プロジェクトは基準が逆であるため、設計値は流用せず Outfit と Noto の cap-height /
@@ -297,7 +297,7 @@ CSS の `text-autospace: normal` に委ね、フォントには含めない。3�
 | -- | ------------------------------------------------- | ---- | -------------------------------------------------------------------- |
 | R1 | 合成時のグリフ名衝突・cmap マージ・GSUB/GPOS 統合 | 高   | **解消**（M1）。合成ツール側で処理されることを確認済み                 |
 | R2 | サブセット化で layout feature が脱落する          | 中   | ⑤の後に feature 保持の検証工程を設ける                                |
-| R3 | ウェイトによって `palt` の値が変わり、太い側で急に詰まる | 低   | **調査済み**。400 / 700 では XAdvance が同一のため段差は生じない（[notes/palt-featurevariations.md](notes/palt-featurevariations.md)） |
+| R3 | `palt` の値がウェイトの境界で切り替わり、字送りに段差が出る | 低   | **調査済み**。400 / 700 の2ウェイトでは問題にならない。将来 500 / 600 を足すと 600–700 間にのみ不連続が生じる（[notes/palt-weight-boundary.md](notes/palt-weight-boundary.md)） |
 | R4 | ウェイトごとに `glyphYShift` の最適値が異なる     | 低   | 静的インスタンス化後に適用し、ウェイト別に値を持てる構造とする        |
 | R5 | ②の処理が既存サイトのレイアウトを動かす           | 中   | 約物は隣接時のみに影響を限定した。かなの縮みは体感サイズが変わらない範囲とし、M4 で影響を確認 |
 
