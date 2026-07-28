@@ -15,6 +15,7 @@ Noto Sans JP と一致する。
 | [docs/plan.md](docs/plan.md) | 開発計画書。目的・方針・アーキテクチャ |
 | [docs/yakumono.md](docs/yakumono.md) | 約物の処理と、不採用にした案 |
 | [docs/proportional.md](docs/proportional.md) | かな・全角英数の字幅のプロポーショナル化 |
+| [docs/glyph-vertical.md](docs/glyph-vertical.md) | グリフ単位の垂直調整 |
 | [docs/tuner.md](docs/tuner.md) | 和欧調整ツールの仕様 |
 | [docs/notes/](docs/notes/) | 調査メモ（ツール構成、M1 の検証、`palt` の境界） |
 
@@ -36,7 +37,9 @@ curl -sSL -o sources/Outfit.ttf \
 設計値を目視で決めるための調整ツール:
 
 ```bash
-.venv/bin/python -m notofit.server   # http://127.0.0.1:8765/
+.venv/bin/python -m notofit.server
+#   http://127.0.0.1:8765/         和欧調整（SCALE / ベースライン / 約物 / 字幅）
+#   http://127.0.0.1:8765/glyphs   グリフ単位の垂直調整
 ```
 
 検証（各スクリプトは単体で実行でき、失敗があれば終了コード 1 を返す）:
@@ -45,6 +48,7 @@ curl -sSL -o sources/Outfit.ttf \
 .venv/bin/python tests/test_palt.py       # palt の焼き込み
 .venv/bin/python tests/test_yakumono.py   # 約物の kern と feature 削除
 .venv/bin/python tests/test_params.py     # SCALE / BASELINE_OFFSET / wght
+.venv/bin/python tests/test_glyphshift.py # グリフ単位の垂直調整
 .venv/bin/python build/verify_m1.py       # 合成の回帰
 ```
 
@@ -53,7 +57,7 @@ curl -sSL -o sources/Outfit.ttf \
 ```
 notofit/       ビルドコア（palt 焼き込み・約物の kern・合成）
 tuner/         調整ツールの GUI
-config/        調整結果（設計値）
+config/        調整結果（tuning.json / glyph-shifts.json）
 tests/         検証スクリプト
 docs/          計画と設計判断の記録
 ```

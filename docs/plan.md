@@ -208,6 +208,8 @@ M4 で確認する。
 
 #### ④ グリフ単位の垂直調整
 
+詳細と決定経緯は [glyph-vertical.md](glyph-vertical.md)。
+
 本プロジェクト固有の工程。Outfit はコロン類（`:` `;`）が自身の x-height 中心より低く
 配置されており、和文の全角コロンと並置すると差が目立つ。`palt` や `SCALE` は水平方向と
 全体スケールのみを扱うため、対象グリフのアウトラインを個別に垂直移動する。
@@ -278,7 +280,7 @@ M1 は他のすべての工程の前提となるため最初に着手する。
 | 3 | 約物の `kern` の値          | 隣接時に引く量。既定 −500 は JLREQ 由来                  |
 | 4 | かな・全角英数をプロポーショナル化するか | する / しない の2択。字送りの変化量で判断     |
 | 5 | `excludeCodepoints` の対象  | CJK の字形を残す記号の選定                              |
-| 6 | `glyphYShift` の対象と値    | Outfit のコロン類ほか、上下位置を補正するグリフ         |
+| 6 | グリフ単位の垂直調整の対象と値 | Outfit のコロン類ほか。何に合わせるかを含む（→ [glyph-vertical.md](glyph-vertical.md)） |
 | 7 | `metadataMode`              | name テーブルの識別情報をどう構成するか                 |
 
 ---
@@ -304,7 +306,7 @@ CSS の `text-autospace: normal` に委ね、フォントには含めない。3�
 | R1 | 合成時のグリフ名衝突・cmap マージ・GSUB/GPOS 統合 | 高   | **解消**（M1）。合成ツール側で処理されることを確認済み                 |
 | R2 | サブセット化で layout feature が脱落する          | 中   | ⑤の後に feature 保持の検証工程を設ける                                |
 | R3 | `palt` の値がウェイトの境界で切り替わり、字送りに段差が出る | 低   | **調査済み**。400 / 700 の2ウェイトでは問題にならない。将来 500 / 600 を足すと 600–700 間にのみ不連続が生じる（[notes/palt-weight-boundary.md](notes/palt-weight-boundary.md)） |
-| R4 | ウェイトごとに `glyphYShift` の最適値が異なる     | 低   | 静的インスタンス化後に適用し、ウェイト別に値を持てる構造とする        |
+| R4 | ウェイトごとに垂直調整の最適値が異なる            | 低   | **対応済み**。合成後に適用し、設定をウェイト別に持つ構造とした        |
 | R5 | ②の処理が既存サイトのレイアウトを動かす           | 中   | 約物は隣接時のみに影響を限定した。かなの縮みは体感サイズが変わらない範囲とし、M4 で影響を確認 |
 
 ---
@@ -337,6 +339,7 @@ CSS の `text-autospace: normal` に委ね、フォントには含めない。3�
 
 - [yakumono.md](yakumono.md) — 約物の処理と、不採用とした案
 - [proportional.md](proportional.md) — かな・全角英数の字幅のプロポーショナル化
+- [glyph-vertical.md](glyph-vertical.md) — グリフ単位の垂直調整と、その調整ツール
 - [tuner.md](tuner.md) — 和欧調整ツール（開発支援 GUI）の仕様
 - [notes/tools.md](notes/tools.md) — 使用ツールの調査メモ
 - [notes/m1-merge.md](notes/m1-merge.md) — M1 合成の実現性検証の結果
