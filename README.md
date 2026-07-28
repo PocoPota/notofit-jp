@@ -66,10 +66,20 @@ curl -sSL -o sources/Outfit.ttf \
 .venv/bin/python build/verify_m1.py       # 合成の回帰
 ```
 
+## 公開用ページ
+
+`site/index.html`。使い方と、組版上の特徴を素の Noto Sans JP と並べて示す1枚もの。
+`main` に push すると GitHub Actions が GitHub Pages へ送る。
+
+フォントは jsDelivr（npm 経由）から読むため、npm に公開するまでページ上には反映されない。
+ローカルで確認するときは `dist/` を `site/font/` に置き、`<link>` の参照先を
+`./font/notofit-jp.css` に差し替える。
+
 ## 構成
 
 ```
 notofit/       ビルドコア（palt 焼き込み・約物の kern・合成）
+site/          公開用ページ
 tuner/         調整ツールの GUI
 config/        調整結果（tuning.json / glyph-shifts.json）
 tests/         検証スクリプト

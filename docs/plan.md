@@ -125,9 +125,13 @@ cap-height に合わせて縮小する）とは基準が逆になる。本プロ
 | GitHub Release | 併用するかは後で判断する |
 | ライセンス | `OFL.txt` を同梱する |
 
-**サンプルと使い方を載せた Web ページも用意する。** 実物を見せられる場と、CSS の書き方
-（→ [css-guide.md](css-guide.md)）の案内を兼ねる。`dist/` をそのまま読み込めばよいため
-GitHub Pages で足りる。時期は配布準備以降とし、公開そのものはブロックしない。
+**サンプルと使い方を載せた Web ページ**を `site/index.html` に置く。実物を見せられる場と、
+CSS の書き方（→ [css-guide.md](css-guide.md)）の案内を兼ねる。比較用に素の Noto Sans JP を
+Google Fonts から読み、約物・字幅・和欧の関係の違いをその場で見せる。
+
+フォント自体は jsDelivr（npm 経由）から読むため、**npm に公開されるまでページ上の
+フォントは反映されない**。公開は `.github/workflows/pages.yml` が `site/` を GitHub Pages
+へ送る。
 
 利用側は CSS を読み込む形を想定する。パスの解決はバンドラに任せるため、工程⑥ が出力する
 `@font-face` の `src` はパッケージ内の相対パスとする。
