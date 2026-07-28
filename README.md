@@ -12,12 +12,13 @@ Noto Sans JP と一致する。
 
 | | |
 | --- | --- |
+| [docs/usage.md](docs/usage.md) | **利用ガイド**（外部向け）。仕様・導入・CSS・ブラウザ挙動 |
+| — 以下は設計の記録 — | |
 | [docs/plan.md](docs/plan.md) | 開発計画書。目的・方針・アーキテクチャ |
 | [docs/yakumono.md](docs/yakumono.md) | 約物の処理と、不採用にした案 |
 | [docs/proportional.md](docs/proportional.md) | かな・全角英数の字幅のプロポーショナル化 |
 | [docs/glyph-vertical.md](docs/glyph-vertical.md) | グリフ単位の垂直調整 |
 | [docs/tuner.md](docs/tuner.md) | 和欧調整ツールの仕様 |
-| [docs/css-guide.md](docs/css-guide.md) | 利用側の CSS の推奨・非推奨（暫定） |
 | [docs/notes/](docs/notes/) | 調査メモ（ツール構成、M1 の検証、`palt` の境界、name テーブル、3エンジンの実測） |
 
 ## 開発

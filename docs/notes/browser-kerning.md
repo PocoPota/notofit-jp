@@ -2,7 +2,7 @@
 
 調査日: 2026-07-28
 対象: Chromium 149 / WebKit 26.5 / Firefox 151（Playwright、macOS）
-関連: [../yakumono.md](../yakumono.md)、[../css-guide.md](../css-guide.md)
+関連: [../yakumono.md](../yakumono.md)、[../usage.md](../usage.md)
 
 ---
 

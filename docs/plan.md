@@ -111,7 +111,7 @@ cap-height に合わせて縮小する）とは基準が逆になる。本プロ
 | `dist/*.woff2`   | サブセット済みフォント（スライス × ウェイト数） |
 | `dist/*.css`     | `@font-face` 宣言                         |
 | `OFL.txt`        | ライセンス全文                            |
-| `README.md`      | 出自・派生関係の明記、CSS の推奨・非推奨（→ [css-guide.md](css-guide.md)） |
+| `README.md`      | 出自・派生関係の明記、CSS の推奨・非推奨（→ [usage.md](usage.md)） |
 | ビルドスクリプト | 各工程を再実行可能な形で                  |
 
 ### 3.4 配布
@@ -126,7 +126,7 @@ cap-height に合わせて縮小する）とは基準が逆になる。本プロ
 | ライセンス | `OFL.txt` を同梱する |
 
 **サンプルと使い方を載せた Web ページ**を `site/index.html` に置く。実物を見せられる場と、
-CSS の書き方（→ [css-guide.md](css-guide.md)）の案内を兼ねる。比較用に素の Noto Sans JP を
+CSS の書き方（→ [usage.md](usage.md)）の案内を兼ねる。比較用に素の Noto Sans JP を
 Google Fonts から読み、約物・字幅・和欧の関係の違いをその場で見せる。
 
 フォント自体は jsDelivr（npm 経由）から読むため、**npm に公開されるまでページ上の
@@ -415,7 +415,7 @@ CSS の `text-autospace: normal` に委ね、フォントには含めない。3�
 - [yakumono.md](yakumono.md) — 約物の処理と、不採用とした案
 - [proportional.md](proportional.md) — かな・全角英数の字幅のプロポーショナル化
 - [glyph-vertical.md](glyph-vertical.md) — グリフ単位の垂直調整と、その調整ツール
-- [css-guide.md](css-guide.md) — 利用側の CSS の推奨・非推奨（配布時の README の下書き）
+- [usage.md](usage.md) — 利用ガイド（外部向け）
 - [notes/name-table.md](notes/name-table.md) — 配布フォントの name テーブルに何を残すか
 - [notes/browser-kerning.md](notes/browser-kerning.md) — 3エンジンでの約物カーニングの実測
 - [tuner.md](tuner.md) — 和欧調整ツール（開発支援 GUI）の仕様
