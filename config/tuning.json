@@ -4,22 +4,22 @@
       "weight": 400,
       "jaWght": 400,
       "latinWght": 400,
-      "scale": 1.0,
+      "scale": 1,
       "baselineOffset": 0
     },
     {
       "weight": 700,
       "jaWght": 700,
       "latinWght": 700,
-      "scale": 1.0,
+      "scale": 1,
       "baselineOffset": 0
     }
   ],
   "paltFractions": {
-    "kana": 1.0,
-    "latin": 1.0,
-    "yakumono": 0.0,
-    "other": 0.0
+    "kana": 1,
+    "latin": 1,
+    "yakumono": 0,
+    "other": 0
   },
   "yakumono": {
     "pair": -500,

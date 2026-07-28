@@ -14,6 +14,7 @@ Noto Sans JP と一致する。
 | --- | --- |
 | [docs/plan.md](docs/plan.md) | 開発計画書。目的・方針・アーキテクチャ |
 | [docs/yakumono.md](docs/yakumono.md) | 約物の処理と、不採用にした案 |
+| [docs/proportional.md](docs/proportional.md) | かな・全角英数の字幅のプロポーショナル化 |
 | [docs/tuner.md](docs/tuner.md) | 和欧調整ツールの仕様 |
 | [docs/notes/](docs/notes/) | 調査メモ（ツール構成、M1 の検証、`palt` の境界） |
 

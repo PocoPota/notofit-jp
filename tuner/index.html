@@ -56,7 +56,7 @@
   }
   .presets button.on { background: var(--accent); border-color: var(--accent); color: #0d1117; }
 
-  textarea, .num {
+  textarea {
     width: 100%; background: #0f1116; color: var(--fg); border: 1px solid var(--line);
     border-radius: 5px; padding: 7px; font-size: 12px; font-family: inherit; resize: vertical;
   }
@@ -105,6 +105,15 @@
   /* 見本をペア単位で並べる。文字列を空白で区切ると、区切りの見え方が前後の約物の
      インク位置に左右されて比較にならないため、間隔は CSS で一定にする。 */
   .item-row { display: flex; flex-wrap: wrap; gap: 4px 1.4em; align-items: baseline; }
+
+  /* プロポーショナル化の比較。折り返すと幅を比べられないため nowrap にする */
+  .cmp { overflow-x: auto; }
+  .cmp .sample { white-space: nowrap; }
+  .cmp .lbl { display: flex; justify-content: space-between; align-items: baseline; }
+  .cmp .metric {
+    font: 600 10px/1 ui-monospace, Menlo, monospace; color: #6b7280;
+    text-transform: none; letter-spacing: 0;
+  }
   .item { position: relative; display: inline-block; }
   .item .ovref { position: absolute; left: 0; top: 0; color: var(--ref); opacity: .55; }
   .lbl { font-size: 9px; color: #a3a9b8; letter-spacing: .1em; margin: 10px 0 2px; }
@@ -210,6 +219,10 @@
       <div id="block-baseline"></div>
     </div>
     <div class="specimen">
+      <h3>プロポーショナル化の比較（かな・全角英数）</h3>
+      <div id="block-palt"></div>
+    </div>
+    <div class="specimen">
       <h3>約物の隣接（詰まるべき）</h3>
       <div id="block-pair"></div>
     </div>
@@ -231,7 +244,7 @@ const BASELINE_TEXT = 'あAアB亜Cかd永Ex';
 const MISC_TEXT = '「引用」（括弧）・中点：コロン、読点。句点 12:34 AM 2026年7月27日 100%';
 const PAIRS = ['」「', '。」', '、」', '）（', '』『', '」（', '・「', '」・'];
 const SOLOS = ['あ「い', 'う」え', 'お。か', 'き、く', 'け・こ', 'さ：し'];
-const PALT_PRESETS = [0, 0.5, 1.0];
+const PALT_PRESETS = [0, 1.0];
 
 const state = {
   weights: {},
@@ -246,6 +259,7 @@ const state = {
   featPalt: false,
 };
 let gen = 0, timer = null, loaded = [];
+let cmpFonts = { off: null, on: null };
 
 const $ = (id) => document.getElementById(id);
 const wc = () => state.weights[state.current];
@@ -324,7 +338,7 @@ async function loadFace(name, url) {
   await face.load();
   document.fonts.add(face);
   loaded.push(face);
-  if (loaded.length > 8) document.fonts.delete(loaded.shift());
+  if (loaded.length > 16) document.fonts.delete(loaded.shift());
   return name;
 }
 
@@ -341,10 +355,19 @@ async function refresh() {
   });
   try {
     const t0 = performance.now();
-    const [pv, rf] = await Promise.all([
+    const cmpQuery = (fraction) => {
+      const c = new URLSearchParams(q);
+      c.set('paltKana', fraction);
+      c.set('paltLatin', fraction);
+      return '/api/preview?' + c;
+    };
+    const [pv, rf, c0, c1] = await Promise.all([
       loadFace(`pv${id}`, '/api/preview?' + q),
       loadFace(`rf${id}`, '/api/reference?' + new URLSearchParams({ weight: w.jaWght, text })),
+      loadFace(`c0${id}`, cmpQuery(0)),
+      loadFace(`c1${id}`, cmpQuery(1)),
     ]);
+    cmpFonts = { off: c0, on: c1 };
     if (id !== gen) return;
     const root = document.documentElement.style;
     root.setProperty('--preview-font', pv);
@@ -435,10 +458,50 @@ function itemBlock(el, items, px) {
   }
 }
 
+function paltBlock(el, text, px) {
+  el.className = 'cmp';
+  el.innerHTML = '';
+  const rows = [
+    ['0.00 — 全角のまま', cmpFonts.off],
+    ['1.00 — プロポーショナル化', cmpFonts.on],
+  ];
+  const widths = [];
+  rows.forEach(([name, family]) => {
+    const head = document.createElement('div');
+    head.className = 'lbl';
+    const left = document.createElement('span');
+    left.textContent = name;
+    const right = document.createElement('span');
+    right.className = 'metric';
+    head.append(left, right);
+    el.appendChild(head);
+
+    const p = document.createElement('p');
+    p.className = 'sample';
+    p.style.fontSize = px + 'px';
+    if (family) p.style.fontFamily = `${family}, sans-serif`;
+    // 幅はインライン要素で測る。p はブロック要素なので、中身ではなくコンテナ幅を返す
+    const inner = document.createElement('span');
+    inner.textContent = text;
+    p.appendChild(inner);
+    el.appendChild(p);
+    widths.push([right, inner, px]);
+  });
+  // 実際に描画された幅を測り、0.00 を基準にした比を出す
+  requestAnimationFrame(() => {
+    const em = widths.map(([, span, size]) => span.getBoundingClientRect().width / size);
+    widths.forEach(([label], i) => {
+      const ratio = em[0] ? (em[i] / em[0]) * 100 : 100;
+      label.textContent = `${em[i].toFixed(2)}em` + (i ? `  ${ratio.toFixed(1)}%` : '  100.0%');
+    });
+  });
+}
+
 function render() {
   block($('block-head'), state.text, state.size);
   block($('block-body'), state.text.repeat(2), 16);
   block($('block-baseline'), BASELINE_TEXT, Math.max(state.size, 56));
+  paltBlock($('block-palt'), state.text, 20);
   itemBlock($('block-pair'), PAIRS, Math.max(28, state.size * 0.7));
   itemBlock($('block-solo'), SOLOS, Math.max(28, state.size * 0.7));
   block($('block-misc'), MISC_TEXT, 22);
