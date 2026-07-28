@@ -134,11 +134,22 @@ GitHub Pages で足りる。時期は配布準備以降とし、公開そのも�
 
 ```
 notofit-jp/
-├── notofit-jp.css     @font-face（スライス × ウェイト）
-├── w/*.woff2          サブセット済みフォント
+├── notofit-jp.css     @font-face（全ウェイト）
+├── 400.css / 700.css  ウェイト単位で読み込みたい場合
+├── w/<weight>/*.woff2 サブセット済みフォント（125スライス × ウェイト）
+├── package.json
+├── manifest.json      生成結果の内訳
 ├── OFL.txt
-└── README.md          出自・派生関係、CSS の推奨と非推奨
+└── README.md          使い方、CSS の推奨と非推奨、出自とクレジット
 ```
+
+`dist/` 一式がそのままパッケージの中身になる。`npm pack` で 6.0MB / 257ファイル。
+
+### バージョン
+
+`notofit/__init__.py` の `__version__` を唯一の出処とし、**フォントの nameID 5 と npm の
+`version` が同じ値**になるようにする。フォントを更新すれば字送りが変わりうるため、
+利用側から見れば破壊的変更になりうる点に注意する。
 
 ---
 
@@ -304,8 +315,8 @@ Noto Sans JP の Google Fonts 版 CSS と同じ `unicode-range` の区切り・�
 | M2 | 設計値の確定       | **完了**（2026-07-28）。値は `config/tuning.json` と `config/glyph-shifts.json` |
 | M3 | 単一ウェイトの完成 | **完了**（2026-07-28）。①〜⑥ を通して生成し、3エンジンで確認（[notes/browser-kerning.md](notes/browser-kerning.md)） |
 | M4 | 置き換え互換性の確認 | Noto Sans JP 採用ページで差し替え、行送りの一致と、折り返し位置の変化量が想定内であることを確認 |
-| M5 | 全ウェイト展開     | 決定したウェイト数でビルドを自動化                                   |
-| M6 | 配布準備           | npm パッケージ化、OFL.txt 同梱、README（出自・デザイナーのクレジット・CSS の推奨と非推奨）、name テーブルの確認 |
+| M5 | 全ウェイト展開     | **完了**（2026-07-28）。`notofit.release` が 400 / 700 を一括で生成する |
+| M6 | 配布準備           | **ビルド側は完了**（2026-07-28）。`package.json` / README / OFL.txt を生成し、name テーブルに身元情報を入れた。残るは公開の実行 |
 
 M1 は他のすべての工程の前提となるため最初に着手する。
 
@@ -384,6 +395,9 @@ CSS の `text-autospace: normal` に委ね、フォントには含めない。3�
 
 - `OFL.txt` を同梱し、OFL 1.1 で配布する
 - 名称に `Source` を含めない
+- **自前の Reserved Font Name は設定しない。** 設定すると改変版が `Notofit` を名乗れなく
+  なるが、利用側の手間が増える。Gen Interface JP も設定しておらず、Google Fonts も
+  推奨していない
 - 元フォントの著作権表示を残す。**Noto Sans JP の著作権表示は Adobe のみ**
   （Source Han Sans 由来）で、Google の表示は元から存在しない。Outfit は
   The Outfit Project Authors

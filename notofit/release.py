@@ -21,7 +21,9 @@ from fontTools.ttLib import TTFont
 from fontTools.subset import Subsetter, Options
 
 from . import slices
-from .build import ROOT, SHIFT_CONFIG, TuningConfig, build_weight
+from . import __version__
+from .build import (ROOT, SHIFT_CONFIG, PROJECT, PROJECT_URL,
+                    TuningConfig, build_weight)
 from .glyphshift import ShiftConfig
 from .yakumono import CLASSES
 
@@ -85,6 +87,90 @@ def font_face(family: str, weight: int, url: str, unicode_range: str) -> str:
     )
 
 
+def package_json(family: str, stem: str, weights) -> str:
+    """npm パッケージのメタデータ。バージョンはフォントの nameID 5 と同じ値を使う。"""
+    return json.dumps({
+        'name': stem,
+        'version': __version__,
+        'description': f'{family} — Outfit と Noto Sans JP を合成した和欧混植用フォント',
+        'style': f'{stem}.css',
+        'files': ['*.css', 'w', 'manifest.json', 'OFL.txt', 'README.md'],
+        'keywords': ['font', 'webfont', 'japanese', 'cjk', 'woff2'],
+        'license': 'OFL-1.1',
+        'repository': {'type': 'git', 'url': f'git+{PROJECT_URL}.git'},
+        'homepage': PROJECT_URL,
+        'sideEffects': ['*.css'],
+    }, ensure_ascii=False, indent=2) + '\n'
+
+
+def readme(family: str, stem: str, weights) -> str:
+    """配布パッケージの README。利用側が最初に読むもの。"""
+    faces = ' / '.join(str(w) for w in weights)
+    return f"""# {family}
+
+Outfit と Noto Sans JP を合成した、Web 向けの和欧混植フォント。
+
+Noto Sans JP を使っているページを `font-family` の差し替えだけで置き換えられることを
+目標にしている。行の高さと、単独で現れる約物の字送りは Noto Sans JP と一致する。
+
+ウェイトは {faces}。横書き専用。
+
+## 使い方
+
+```
+npm install {stem}
+```
+
+```css
+@import "{stem}/{stem}.css";          /* 全ウェイト */
+/* または @import "{stem}/400.css"; のようにウェイト単位で */
+
+body {{
+  font-family: "{family}", sans-serif;
+  text-autospace: normal;   /* 和欧間のアキ。書かないと付かない */
+  font-kerning: normal;     /* 約物の隣接処理。Firefox 向けに必要 */
+}}
+```
+
+`unicode-range` でスライスしてあるため、ページが実際に読み込むのは使用文字に対応する
+十数個のファイルだけになる。
+
+## 書いてはいけない CSS
+
+| プロパティ | 何が起きるか |
+| ---------- | ------------ |
+| `font-kerning: none` | 約物の隣接処理が無効になり、`」「` が全角ベタに戻る |
+
+`font-feature-settings` の `palt` / `halt` / `chws`、`size-adjust`、`ascent-override`、
+`text-spacing-trim` は指定しても効果がない。字幅と縦メトリクスはフォント側で確定して
+いるため。
+
+## Noto Sans JP から変わること
+
+| 項目 | 変化 |
+| ---- | ---- |
+| 行の高さ | **変わらない** |
+| 単独の約物の字送り | **変わらない**（全角のまま） |
+| 隣接した約物 | 詰まる（`」「` が 2.0em → 1.5em） |
+| かな・全角英数の字送り | プロポーショナルになるため詰まる（本文で約 4.5%） |
+| 欧文 | Outfit に置き換わる |
+
+WebKit では、2文字目が始め括弧になる組み合わせ（`」「` など）で約物の詰めが効かない。
+その位置で行分割が許されるため、ブラウザ側の処理でカーニングが届かない。
+
+## ライセンス
+
+SIL Open Font License 1.1（`OFL.txt`）。
+
+- Noto Sans JP — Copyright 2014-2021 Adobe, with Reserved Font Name 'Source'
+  デザイン: 西塚涼子（かな・注音・漢字）、Paul D. Hunt（ラテン・ギリシャ・キリル）ほか
+- Outfit — Copyright 2021 The Outfit Project Authors
+  デザイン: Rodrigo Fuenzalida（fragTYPE）
+- {family} — Copyright 2026 {PROJECT}
+
+`{PROJECT_URL}`
+"""
+
 def build(out_dir: Path = DIST, verbose: bool = True,
           ranges: list[str] | None = None) -> dict:
     """dist/ を作る。既存の内容は入れ替える。
@@ -104,7 +190,8 @@ def build(out_dir: Path = DIST, verbose: bool = True,
         shutil.rmtree(out_dir)
     out_dir.mkdir(parents=True)
 
-    manifest = {'family': family, 'slices': len(ranges), 'weights': {}}
+    manifest = {'family': family, 'version': __version__,
+                'slices': len(ranges), 'weights': {}}
     all_css: list[str] = []
     started = time.time()
 
@@ -137,8 +224,11 @@ def build(out_dir: Path = DIST, verbose: bool = True,
     (out_dir / f'{stem}.css').write_text(''.join(all_css))
     if OFL.exists():
         shutil.copy(OFL, out_dir / 'OFL.txt')
+    weights = [wc.weight for wc in cfg.weights]
     (out_dir / 'manifest.json').write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
+    (out_dir / 'package.json').write_text(package_json(family, stem, weights))
+    (out_dir / 'README.md').write_text(readme(family, stem, weights))
 
     manifest['seconds'] = round(time.time() - started, 1)
     if verbose:

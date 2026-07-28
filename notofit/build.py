@@ -21,11 +21,17 @@ from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 from fontTools.subset import Subsetter, Options
 
+from . import __version__
 from .palt import bake, DEFAULT_FRACTIONS
 from .yakumono import add_kern_pairs, remove_features
 from . import glyphshift
 
 ROOT = Path(__file__).resolve().parent.parent
+
+#: 配布時の身元情報。OFL.txt の著作権表記と揃える（→ docs/notes/name-table.md）
+PROJECT = 'The Notofit JP Project Authors'
+PROJECT_URL = 'https://github.com/PocoPota/notofit-jp'
+COPYRIGHT_YEAR = 2026
 NOTO = ROOT / 'sources' / 'NotoSansJP.ttf'
 OUTFIT = ROOT / 'sources' / 'Outfit.ttf'
 CACHE = ROOT / 'build' / 'cache'
@@ -164,6 +170,11 @@ def merge(base: Path, sub: Path, wc: WeightConfig, cfg: TuningConfig,
             'familyName': cfg.familyName,
             'weight': wc.weight,
             'metricsSource': 'base',   # 縦メトリクスは和文側に固定（置き換え互換性）
+            'version': __version__,
+            # 元フォントの著作権表示に追記される（既存の表示は消えない）
+            'copyright': f'Copyright {COPYRIGHT_YEAR} {PROJECT} ({PROJECT_URL})',
+            'manufacturer': PROJECT,
+            'manufacturerURL': PROJECT_URL,
         },
         'export': {'path': {'font': str(out_ttf)}},
     }

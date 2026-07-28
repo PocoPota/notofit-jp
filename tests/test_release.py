@@ -35,7 +35,33 @@ with tempfile.TemporaryDirectory() as tmp:
     check('全ウェイトの CSS がある', (out / 'notofit-jp.css').exists())
     check('OFL.txt が同梱される', (out / 'OFL.txt').exists())
     check('manifest.json がある', (out / 'manifest.json').exists())
+    check('package.json がある', (out / 'package.json').exists())
+    check('README.md がある', (out / 'README.md').exists())
     check('中間ファイルが残らない', not (out / '_tmp').exists())
+
+    print('\n=== npm パッケージ ===')
+    pkg = json.loads((out / 'package.json').read_text())
+    from notofit import __version__
+    check('name が付く', pkg['name'] == 'notofit-jp', pkg['name'])
+    check('version が実装と一致', pkg['version'] == __version__, pkg['version'])
+    check('license が OFL-1.1', pkg['license'] == 'OFL-1.1')
+    check('style が全ウェイト CSS', pkg['style'] == 'notofit-jp.css')
+    for f in ('*.css', 'w', 'OFL.txt', 'README.md'):
+        check(f'files に {f} を含む', f in pkg['files'])
+    readme = (out / 'README.md').read_text()
+    for kw in ('npm install notofit-jp', 'text-autospace: normal',
+               'font-kerning: normal', 'SIL Open Font License',
+               'Adobe', 'The Outfit Project Authors'):
+        check(f'README に「{kw[:26]}」', kw in readme)
+
+    print('\n=== フォントの身元情報 ===')
+    latin_font = TTFont(out / f'w/{weights[0]}/000.woff2')
+    names = latin_font['name']
+    copyright_text = names.getDebugName(0) or ''
+    for who in ('Adobe', 'The Outfit Project Authors', 'The Notofit JP Project Authors'):
+        check(f'著作権に {who[:26]}', who in copyright_text)
+    check('バージョンが実装と一致',
+          __version__ in (names.getDebugName(5) or ''), names.getDebugName(5))
 
     print('\n=== CSS ===')
     css = (out / f'{weights[0]}.css').read_text()

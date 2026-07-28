@@ -46,9 +46,13 @@ curl -sSL -o sources/Outfit.ttf \
 配布物のビルド:
 
 ```bash
-.venv/bin/python -m notofit.release            # dist/ を作る（約2分）
+.venv/bin/python -m notofit.release            # dist/ を作る（約1分）
 .venv/bin/python -m notofit.release --slices   # 区切りを取り直す
 ```
+
+`dist/` がそのまま npm パッケージの中身になる（`package.json` / CSS / woff2 /
+`OFL.txt` / README を生成する）。バージョンは `notofit/__init__.py` の `__version__`
+を唯一の出処とし、フォントの nameID 5 と npm の `version` に同じ値が入る。
 
 検証（各スクリプトは単体で実行でき、失敗があれば終了コード 1 を返す）:
 
