@@ -123,7 +123,7 @@
 <div class="app">
   <aside>
     <h1>Notofit JP 和欧調整ツール</h1>
-    <div class="sub">和欧の相対関係だけを扱う。グリフ個別の調整は対象外。</div>
+    <div class="sub">設計値を目視で決めるための道具。決めた値は config/tuning.json に保存される。</div>
 
     <section>
       <h2>ウェイト</h2>
@@ -170,15 +170,25 @@
     </section>
 
     <section>
-      <h2>表示条件</h2>
+      <h2>かな・全角英数の字幅</h2>
       <div class="field">
-        <label><span class="name">palt 焼き込み｜かな</span><span class="val" id="v-paltKana"></span></label>
+        <label><span class="name">かな</span><span class="val" id="v-paltKana"></span></label>
         <div class="presets" id="paltKana-presets"></div>
       </div>
       <div class="field">
-        <label><span class="name">palt 焼き込み｜全角英数</span><span class="val" id="v-paltLatin"></span></label>
+        <label><span class="name">全角英数</span><span class="val" id="v-paltLatin"></span></label>
         <div class="presets" id="paltLatin-presets"></div>
-        <div class="hint">調整対象ではない。どの前提で見ているかの切り替え</div>
+      </div>
+      <div class="hint" style="font-size:10px;color:var(--dim)">
+        実質2択。プロポーショナルにすると字送りが変わる。両方の見え方は
+        「プロポーショナル化の比較」で常に並べて確認できる。
+      </div>
+    </section>
+
+    <section>
+      <h2>表示条件</h2>
+      <div class="hint" style="font-size:10px;color:var(--dim);margin-bottom:10px">
+        見え方だけを変える。保存されない。
       </div>
       <div class="row"><input type="checkbox" id="feat-palt"><label for="feat-palt">palt を有効にした状態で見る</label></div>
       <div class="row"><input type="checkbox" id="show-ref" checked><label for="show-ref">素の Noto Sans JP を並べる</label></div>
@@ -200,6 +210,9 @@
       <div class="actions">
         <button class="primary" id="save">保存</button>
         <button id="copy">JSON をコピー</button>
+      </div>
+      <div class="hint" style="font-size:10px;color:var(--dim);margin-bottom:8px">
+        保存される値: <span id="save-summary"></span>
       </div>
       <div id="status"></div>
     </section>
@@ -245,6 +258,7 @@ const MISC_TEXT = '「引用」（括弧）・中点：コロン、読点。句�
 const PAIRS = ['」「', '。」', '、」', '）（', '』『', '」（', '・「', '」・'];
 const SOLOS = ['あ「い', 'う」え', 'お。か', 'き、く', 'け・こ', 'さ：し'];
 const PALT_PRESETS = [0, 1.0];
+const PALT_LABELS = { 0: '全角のまま', 1: 'プロポーショナル' };
 
 const state = {
   weights: {},
@@ -300,7 +314,7 @@ function buildPresets() {
     host.innerHTML = '';
     PALT_PRESETS.forEach((p) => {
       const b = document.createElement('button');
-      b.textContent = p.toFixed(2);
+      b.textContent = PALT_LABELS[p];
       b.className = p === state.paltFractions[key] ? 'on' : '';
       b.onclick = () => {
         state.paltFractions[key] = p;
@@ -325,6 +339,11 @@ function syncControls() {
   $('v-latinWght').textContent = w.latinWght;
   $('v-paltKana').textContent = state.paltFractions.kana.toFixed(2);
   $('v-paltLatin').textContent = state.paltFractions.latin.toFixed(2);
+  // 保存対象であることが分かるよう、設定セクションに現在値を出す
+  const saved = configJSON();
+  $('save-summary').textContent =
+    `かな ${saved.paltFractions.kana} / 全角英数 ${saved.paltFractions.latin}`
+    + ` · kern ${saved.yakumono.pair}/${saved.yakumono.middle}`;
   $('v-kernPair').textContent = state.yakumono.pair;
   $('v-kernMiddle').textContent = state.yakumono.middle;
   $('v-size').textContent = state.size + 'px';
