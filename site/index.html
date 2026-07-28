@@ -3,229 +3,265 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Notofit JP — Outfit と Noto Sans JP を合成した和欧混植フォント</title>
-<meta name="description" content="Noto Sans JP を font-family の差し替えだけで置き換えられる、Web 向けの和欧混植フォント。">
+<title>Notofit JP — 和欧混植フォント</title>
+<meta name="description" content="Outfit と Noto Sans JP を合成した、Web 向けの和欧混植フォント。Noto Sans JP の置き換えとして使えます。">
 
-<!-- 本フォント。ローカルで確認するときは ./font/notofit-jp.css に差し替える -->
+<!-- GitHub Pages の既定 URL。独自ドメインにする場合は書き換える -->
+<link rel="canonical" href="https://pocopota.github.io/notofit-jp/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Notofit JP">
+<meta property="og:title" content="Notofit JP — 和欧混植フォント">
+<meta property="og:description" content="Outfit と Noto Sans JP を合成した、Web 向けの和欧混植フォント。Noto Sans JP の置き換えとして使えます。">
+<meta property="og:url" content="https://pocopota.github.io/notofit-jp/">
+<meta property="og:image" content="https://pocopota.github.io/notofit-jp/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- ローカルで確認するときは ./font/notofit-jp.css に差し替える -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notofit-jp@0.1/notofit-jp.css">
-<!-- 比較用の素の Noto Sans JP -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap">
 
 <style>
   :root {
-    --fg: #16181d; --dim: #6b7280; --line: #e5e7eb; --bg: #ffffff; --soft: #f7f8fa;
-    --accent: #2563eb; --warn: #b45309;
+    --ink: #111317;
+    --mute: #9aa0aa;
+    --mid: #565c68;
+    --hair: #ececef;
+    --paper: #fff;
     --font: "Notofit JP", sans-serif;
-    --noto: "Noto Sans JP", sans-serif;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --fg:#e6e9ef; --dim:#9aa3b2; --line:#2c313a; --bg:#14161a; --soft:#1c1f25;
-            --accent:#6ea8fe; --warn:#fbbf24; }
   }
   * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
   body {
-    margin: 0; background: var(--bg); color: var(--fg);
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
     font-family: var(--font);
-    font-kerning: normal;      /* 約物の隣接処理（Firefox 向けに必要） */
-    text-autospace: normal;    /* 和欧間のアキ */
-    line-height: 1.9; font-size: 16px;
+    font-kerning: normal;
+    text-autospace: normal;
+    font-size: 16px;
+    line-height: 1.85;
     -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
-  section { padding: 44px 0; border-top: 1px solid var(--line); }
-  section:first-of-type { border-top: 0; }
-  h1 { font-size: clamp(38px, 8vw, 66px); line-height: 1.25; margin: 0 0 12px; font-weight: 700; }
-  h2 { font-size: 22px; margin: 0 0 6px; font-weight: 700; }
-  h3 { font-size: 15px; margin: 28px 0 8px; font-weight: 700; }
-  p { margin: 0 0 16px; }
-  .lead { font-size: 18px; color: var(--dim); margin-bottom: 28px; }
-  .note { font-size: 13px; color: var(--dim); }
-  a { color: var(--accent); }
-  code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .89em;
-    background: var(--soft); padding: 2px 5px; border-radius: 4px;
+  .wrap { max-width: 880px; margin: 0 auto; padding-left: 28px; padding-right: 28px; }
+
+  /* 節の見出しは小さく引いて、見本を主役にする */
+  .eyebrow {
+    font-size: 12px; letter-spacing: .16em; color: var(--mid);
+    text-transform: uppercase; margin: 0 0 30px; font-weight: 700;
   }
+  /* 特徴の説明。ラベルではなく見出しとして扱う */
+  .feature-title { font-size: 19px; font-weight: 700; margin: 0 0 18px; line-height: 1.7; }
+  .caption { font-size: 15px; color: var(--mid); margin: 16px 0 0; line-height: 1.8; }
+  .caption code { font-size: 13.5px; color: var(--mid); }
+  .caption a { color: var(--ink); border-bottom-color: var(--mute); }
+  section { padding-top: 92px; padding-bottom: 92px; }
+  .rule { height: 1px; background: var(--hair); border: 0; margin: 0; }
+
+  /* ヒーロー */
+  header { padding-top: 104px; padding-bottom: 92px; }
+  .mark { font-size: clamp(52px, 11vw, 116px); line-height: 1; margin: 0; letter-spacing: -.01em; }
+  .intro { margin: 34px 0 0; max-width: 32em; }
+  .intro p { font-size: clamp(17px, 2vw, 19px); line-height: 1.95; margin: 0 0 14px; }
+  .intro p:nth-last-child(2) { color: var(--mute); }
+  .intro .status {
+    margin: 26px 0 0; padding: 14px 18px; border-left: 3px solid var(--ink);
+    background: #fafafb; font-size: 15px; line-height: 1.8; color: var(--mid);
+  }
+  .intro .status strong { color: var(--ink); }
+  .intro strong { font-weight: 700; }
+  .intro p:last-child strong { color: var(--ink); }
+
+  .body-copy { font-size: 17px; line-height: 2; margin: 0; max-width: 34em; }
+
+  /* 比較。枠を作らず、細い罫と小さなラベルだけで並べる */
+  .pair { display: grid; gap: 0; }
+  .pair > div { padding: 22px 0; border-top: 1px solid var(--hair); }
+  .pair > div:last-child { border-bottom: 1px solid var(--hair); }
+  /* フォント名だけを示す小さな見出し。読める濃さにする */
+  .label {
+    font-size: 12.5px; letter-spacing: .04em; color: var(--mid);
+    display: block; margin-bottom: 10px; font-weight: 700;
+  }
+  .line { font-size: clamp(24px, 4.4vw, 38px); line-height: 1.5; margin: 0; }
+  .line.small { font-size: clamp(17px, 2.4vw, 21px); line-height: 1.9; }
+  /* 比較用の Noto は一般的なページと同じ条件で見せる。body の font-kerning: normal を
+     継承させると、Firefox では palt まで有効になり本来の見え方でなくなる */
+  .noto { font-family: "Noto Sans JP", sans-serif; font-kerning: auto; }
+  /* ブラウザ側の約物処理を切った状態 */
+  .raw { text-spacing-trim: space-all; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 44px 40px; }
+  @media (max-width: 640px) {
+    .grid { grid-template-columns: 1fr; gap: 34px; }
+    .wrap { padding-left: 20px; padding-right: 20px; }
+    section { padding-top: 64px; padding-bottom: 64px; }
+    header { padding-top: 72px; padding-bottom: 56px; }
+  }
+
   pre {
-    background: var(--soft); border: 1px solid var(--line); border-radius: 8px;
-    padding: 16px; overflow-x: auto; margin: 0 0 16px;
+    background: #fafafb; border: 1px solid var(--hair); border-radius: 10px;
+    padding: 20px 22px; overflow-x: auto; margin: 0;
   }
-  pre code { background: none; padding: 0; font-size: 13px; line-height: 1.75; }
-
-  header { padding: 72px 0 44px; }
-  .hero {
-    font-size: clamp(30px, 6.4vw, 54px); line-height: 1.55; margin: 26px 0 0;
-    letter-spacing: .01em;
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13.5px; line-height: 1.9; color: var(--ink);
   }
+  .stack { display: grid; gap: 14px; }
 
-  /* 比較表示。同じ文章を2つのフォントで並べる */
-  .compare { display: grid; gap: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-  .compare > div { padding: 18px 20px; }
-  .compare > div + div { border-top: 1px solid var(--line); }
-  .compare .tag {
-    font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: .1em;
-    color: var(--dim); display: block; margin-bottom: 6px; text-transform: uppercase;
-  }
-  .noto { font-family: var(--noto); }
-  .sample { font-size: 21px; line-height: 1.9; margin: 0; }
-  .sample.big { font-size: clamp(26px, 5vw, 38px); line-height: 1.6; }
+  a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--hair); }
+  a:hover { border-bottom-color: var(--mute); }
 
-  table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 0 0 16px; }
-  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--dim); font-weight: 700; font-size: 12px; }
-  td code { white-space: nowrap; }
-
-  .callout {
-    border-left: 3px solid var(--warn); background: var(--soft);
-    padding: 14px 18px; border-radius: 0 8px 8px 0; font-size: 14px; margin: 0 0 16px;
-  }
-  .w400 { font-weight: 400; } .w700 { font-weight: 700; }
-  footer { padding: 40px 0 72px; color: var(--dim); font-size: 13px; border-top: 1px solid var(--line); }
+  footer { padding-top: 76px; padding-bottom: 100px; color: var(--mute); font-size: 13.5px; line-height: 1.9; }
+  footer .links { margin-bottom: 26px; font-size: 15px; }
+  footer .links a { color: var(--ink); margin-right: 22px; }
 </style>
 </head>
 <body>
 
 <header class="wrap">
-  <h1>Notofit JP</h1>
-  <p class="lead">Outfit と Noto Sans JP を合成した、Web 向けの和欧混植フォント。<br>
-    Noto Sans JP を使っているページを、<code>font-family</code> の差し替えだけで置き換えられます。</p>
-  <p class="hero">日本語と English が、ひとつの設計で並ぶ。</p>
+  <h1 class="mark">Notofit JP</h1>
+  <div class="intro">
+    <p>欧文の <strong>Outfit</strong> と和文の <strong>Noto Sans JP</strong> を、
+      ひとつのフォントに合成した Web 向けの和欧混植フォントです。</p>
+    <p>和文を基準に、欧文の大きさ・ベースライン・コロン類の高さを合わせています。
+      約物は隣り合ったときだけ詰まり、かなと全角英数はプロポーショナルです。</p>
+    <p>行の高さと単独の約物の字送りは Noto Sans JP と一致するため、
+      <strong>置き換えとして使えます</strong>。ウェイトは 400 と 700、横書き専用。
+      SIL Open Font License 1.1。</p>
+    <p class="status"><strong>現在 0.1.0 の試用段階です。</strong>
+      実際のページでの表示は確認していますが、使用例がまだ少なく、
+      字送りなどの設計値が変わる可能性があります。</p>
+  </div>
 </header>
 
+<hr class="rule">
+
 <section class="wrap">
-  <h2>使い方</h2>
-  <p>npm、または CDN から読み込みます。</p>
+  <p class="eyebrow">Two weights</p>
+  <div class="grid">
+    <div>
+      <span class="label">Regular / 400</span>
+      <p class="line" style="font-weight:400">あのイーハトーヴォの<br>すきとおった風</p>
+    </div>
+    <div>
+      <span class="label">Bold / 700</span>
+      <p class="line" style="font-weight:700">あのイーハトーヴォの<br>すきとおった風</p>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section class="wrap">
+  <p class="eyebrow">Details</p>
+
+  <h3 class="feature-title">隣り合う約物のアキを取り除く</h3>
+  <div class="pair">
+    <div>
+      <span class="label">Notofit JP</span>
+      <p class="line">「引用」（括弧）。そして、次へ</p>
+    </div>
+    <div>
+      <span class="label">Noto Sans JP — このブラウザでの表示</span>
+      <p class="line noto">「引用」（括弧）。そして、次へ</p>
+    </div>
+    <div>
+      <span class="label">Noto Sans JP — ブラウザの補正なし</span>
+      <p class="line noto raw">「引用」（括弧）。そして、次へ</p>
+    </div>
+  </div>
+  <p class="caption">単独で現れる約物は全角のままです。日本語組版では、それが正しい字送りにあたります。<br>
+    Chromium はブラウザ側でも同じ処理を行うため、2行目と3行目に差が出ます。
+    Safari と Firefox にその処理はなく、どちらも3行目の状態になります。
+    Notofit JP はフォント側で処理するため、どのブラウザでも同じ結果になります。</p>
+
+  <h3 class="feature-title" style="margin-top:72px">かなと全角英数をプロポーショナルにする</h3>
+  <div class="pair">
+    <div>
+      <span class="label">Notofit JP</span>
+      <p class="line small">きょうはいい天気ですね。カタカナのサンプル。ＡＢＣ １２３</p>
+    </div>
+    <div>
+      <span class="label">Noto Sans JP</span>
+      <p class="line small noto">きょうはいい天気ですね。カタカナのサンプル。ＡＢＣ １２３</p>
+    </div>
+  </div>
+  <p class="caption">字面の大きさは変えていないため、小さくなったようには見えません。</p>
+
+  <h3 class="feature-title" style="margin-top:72px">欧文の大きさとベースラインを和文に合わせる</h3>
+  <div class="pair">
+    <div>
+      <span class="label">Notofit JP</span>
+      <p class="line">Hello 日本語 Type 組版 9:30</p>
+    </div>
+    <div>
+      <span class="label">Noto Sans JP</span>
+      <p class="line noto">Hello 日本語 Type 組版 9:30</p>
+    </div>
+  </div>
+  <p class="caption">CSS の <code>size-adjust</code> では大きさしか変えられません。ベースラインを動かすために、ひとつのフォントに合成しています。</p>
+
+  <h3 class="feature-title" style="margin-top:72px">コロンや括弧の高さをグリフ単位で補正する</h3>
+  <div class="pair">
+    <div>
+      <span class="label">Notofit JP</span>
+      <p class="line">9:30　９：３０　(注)　（注）</p>
+    </div>
+    <div>
+      <span class="label">Noto Sans JP</span>
+      <p class="line noto">9:30　９：３０　(注)　（注）</p>
+    </div>
+  </div>
+  <p class="caption">半角のコロンは和文より低い位置にあるため、グリフ単位で持ち上げています。
+    全角と並んでも高さが揃います。括弧や引用符も同様です。</p>
+</section>
+
+<hr class="rule">
+
+<section class="wrap">
+  <p class="eyebrow">In use</p>
+  <p class="body-copy">吾輩は猫である。名前はまだ無い。どこで生れたか頓と見当がつかぬ。
+    何でも薄暗いじめじめした所で Meow と鳴いていた事だけは記憶している。
+    吾輩はここで始めて人間というものを見た。しかもあとで聞くとそれは
+    <strong>書生</strong>という人間中で一番<strong>獰悪</strong>な種族であったそうだ。</p>
+</section>
+
+<hr class="rule">
+
+<section class="wrap">
+  <p class="eyebrow">Get started</p>
+  <div class="stack">
 <pre><code>npm install notofit-jp</code></pre>
-<pre><code>/* npm */
-@import "notofit-jp/notofit-jp.css";
+<pre><code>@import "notofit-jp/notofit-jp.css";
 
-/* CDN */
-@import url("https://cdn.jsdelivr.net/npm/notofit-jp@0.1/notofit-jp.css");</code></pre>
-  <p>読み込んだら、次の3つを指定します。</p>
-<pre><code>body {
+body {
   font-family: "Notofit JP", sans-serif;
-  text-autospace: normal;   /* 和欧間のアキ */
-  font-kerning: normal;     /* 約物の隣接処理 */
+  text-autospace: normal;
+  font-kerning: normal;
 }</code></pre>
-  <p class="note">後ろ2つは既定では効きません。<code>text-autospace</code> は多くのブラウザで初期値が
-    <code>no-autospace</code> のため、<code>font-kerning</code> は Firefox が既定で和文に適用しないためです。</p>
-
-  <h3>ウェイト単位で読む</h3>
-  <p>全ウェイトを読み込む必要がなければ、ウェイトごとの CSS があります。</p>
-<pre><code>@import "notofit-jp/400.css";
-@import "notofit-jp/700.css";</code></pre>
-  <p class="note"><code>unicode-range</code> で125個に分割してあるため、どちらの場合もページが実際に
-    ダウンロードするのは使用文字に対応する十数個だけです。</p>
+  </div>
+  <p class="caption">Google Fonts が Noto Sans JP に使っているのとほぼ同じ区切りでサブセット化しています。
+    ページが読み込むのは、使った文字を含むサブセットだけです。
+    CDN は <code>cdn.jsdelivr.net/npm/notofit-jp</code> から利用できます。</p>
+  <p class="caption">仕様、指定する CSS、ブラウザごとの挙動、置き換えたときの変化は
+    <a href="https://github.com/PocoPota/notofit-jp/blob/main/docs/usage.md">利用ガイド</a>にまとめています。</p>
 </section>
 
-<section class="wrap">
-  <h2>ウェイト</h2>
-  <p>Regular（400）と Bold（700）の2つです。</p>
-  <div class="compare">
-    <div><span class="tag">400 — Regular</span>
-      <p class="sample w400">日本語と English の混植。ABC 123 あいうえお漢字</p></div>
-    <div><span class="tag">700 — Bold</span>
-      <p class="sample w700">日本語と English の混植。ABC 123 あいうえお漢字</p></div>
-  </div>
-  <p class="note" style="margin-top:14px">欧文側は、和文と見かけの太さが揃う位置で作っています。
-    Outfit をそのまま 400 / 700 で使うと和文より太く見えるため、少し細い位置を選んでいます。</p>
-</section>
-
-<section class="wrap">
-  <h2>組版について</h2>
-
-  <h3>1. 欧文の大きさと位置を、和文に合わせてある</h3>
-  <p>和文が基準です。欧文を拡縮し、ベースラインを動かして和文に揃えています。
-    CSS の <code>size-adjust</code> では大きさしか変えられず、ベースラインは動かせません。
-    合成する理由がここにあります。</p>
-  <div class="compare">
-    <div><span class="tag">Notofit JP</span>
-      <p class="sample big">Hello 日本語 Type 組版</p></div>
-    <div><span class="tag">Noto Sans JP（比較）</span>
-      <p class="sample big noto">Hello 日本語 Type 組版</p></div>
-  </div>
-
-  <h3>2. 隣り合った約物のアキを取り除く</h3>
-  <p>和文の約物は「半角の字形＋二分アキ」でできています。単独ならこれで正しいのですが、
-    約物が隣り合うとアキが二重になります。重なった分だけを取り除いています。</p>
-  <div class="compare">
-    <div><span class="tag">Notofit JP</span>
-      <p class="sample big">「引用」（括弧）。</p></div>
-    <div><span class="tag">Noto Sans JP（比較）</span>
-      <p class="sample big noto">「引用」（括弧）。</p></div>
-  </div>
-  <p class="note" style="margin-top:14px">単独で現れる約物は全角のままです。詰めるのは隣接したときだけで、
-    <code>font-feature-settings: "palt"</code> のように一律には詰めません。</p>
-  <div class="callout">
-    <strong>Safari では一部が効きません。</strong>
-    <code>」「</code> のように2文字目が始め括弧になる組み合わせでは、その位置で行分割が許されるため、
-    ブラウザ側の処理でカーニングが届きません。その場合は従来どおり全角ベタで表示されます。
-  </div>
-
-  <h3>3. かなと全角英数をプロポーショナルにする</h3>
-  <p>全角固定をやめ、字面に応じた幅にしています。字面そのものの大きさは変えていないため、
-    文字が小さくなったようには見えません。</p>
-  <div class="compare">
-    <div><span class="tag">Notofit JP</span>
-      <p class="sample">きょうはいい天気ですね。カタカナのサンプルもあります。ＡＢＣ １２３</p></div>
-    <div><span class="tag">Noto Sans JP（比較）</span>
-      <p class="sample noto">きょうはいい天気ですね。カタカナのサンプルもあります。ＡＢＣ １２３</p></div>
-  </div>
-
-  <h3>4. 和欧間のアキは CSS に任せる</h3>
-  <p>日本語と欧文の間のアキは <code>text-autospace</code> が担当します。
-    <code>pre</code> や <code>code</code> の中では自動的に無効になるなど、文脈に応じた処理が
-    CSS 側の仕様として用意されているため、フォントには入れていません。</p>
-  <div class="compare">
-    <div><span class="tag">text-autospace: normal</span>
-      <p class="sample" style="text-autospace:normal">日本語とEnglishの混植を確認する</p></div>
-    <div><span class="tag">text-autospace: no-autospace</span>
-      <p class="sample" style="text-autospace:no-autospace">日本語とEnglishの混植を確認する</p></div>
-  </div>
-</section>
-
-<section class="wrap">
-  <h2>置き換えたときに変わること</h2>
-  <table>
-    <tr><th>項目</th><th>変化</th></tr>
-    <tr><td>行の高さ</td><td><strong>変わりません。</strong>縦メトリクスは Noto Sans JP に揃えてあります</td></tr>
-    <tr><td>単独の約物の字送り</td><td><strong>変わりません。</strong>全角のままです</td></tr>
-    <tr><td>隣接した約物</td><td>詰まります（<code>」「</code> が 2.0em → 1.5em）</td></tr>
-    <tr><td>かな・全角英数</td><td>プロポーショナルになるため詰まります。本文で約 4.5%</td></tr>
-    <tr><td>欧文</td><td>Outfit に置き換わります</td></tr>
-  </table>
-  <p class="note">かなが詰まる分、日本語主体のページでは行の折り返し位置が変わります。
-    行の高さは変わらないため、縦方向のレイアウトは保たれます。</p>
-
-  <h3>書いてはいけない CSS</h3>
-  <table>
-    <tr><th>プロパティ</th><th>何が起きるか</th></tr>
-    <tr><td><code>font-kerning: none</code></td><td>約物の隣接処理が無効になります</td></tr>
-  </table>
-  <p class="note"><code>font-feature-settings</code> の <code>palt</code> / <code>halt</code> /
-    <code>chws</code>、<code>size-adjust</code>、<code>ascent-override</code>、
-    <code>text-spacing-trim</code> は指定しても効果がありません。字幅と縦メトリクスは
-    フォント側で確定しているためです。</p>
-</section>
-
-<section class="wrap">
-  <h2>ライセンス</h2>
-  <p>SIL Open Font License 1.1。改変・再配布ができます（派生物も OFL で配布してください）。</p>
-  <table>
-    <tr><th>元フォント</th><th>著作権とデザイン</th></tr>
-    <tr><td>Noto Sans JP</td>
-      <td>Copyright 2014-2021 Adobe, with Reserved Font Name 'Source'<br>
-        <span class="note">西塚涼子（かな・注音・漢字）、Paul D. Hunt（ラテン・ギリシャ・キリル）ほか</span></td></tr>
-    <tr><td>Outfit</td>
-      <td>Copyright 2021 The Outfit Project Authors<br>
-        <span class="note">Rodrigo Fuenzalida（fragTYPE）</span></td></tr>
-  </table>
-  <p class="note">Notofit JP は Google の公式な派生ではありません。</p>
-</section>
+<hr class="rule">
 
 <footer class="wrap">
-  <p><a href="https://github.com/PocoPota/notofit-jp">GitHub</a> ·
-     <a href="https://www.npmjs.com/package/notofit-jp">npm</a></p>
-  <p>Copyright 2026 The Notofit JP Project Authors</p>
+  <p class="links">
+    <a href="https://github.com/PocoPota/notofit-jp">GitHub</a>
+    <a href="https://www.npmjs.com/package/notofit-jp">npm</a>
+    <a href="https://github.com/PocoPota/notofit-jp/blob/main/docs/usage.md">利用ガイド</a>
+  </p>
+  <p>SIL Open Font License 1.1<br>
+    Noto Sans JP — Copyright 2014-2021 Adobe, with Reserved Font Name ‘Source’（西塚涼子、Paul D. Hunt ほか）<br>
+    Outfit — Copyright 2021 The Outfit Project Authors（Rodrigo Fuenzalida）<br>
+    Notofit JP — Copyright 2026 The Notofit JP Project Authors</p>
+  <p>Google の公式な派生ではありません。</p>
 </footer>
 
 </body>

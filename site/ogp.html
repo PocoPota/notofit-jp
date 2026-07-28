@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>Notofit JP — OGP</title>
+<!-- ogp.png の生成元。1200×630 で切り出す。
+     再生成: dist/ を font/ に置いて下の href を ./font/notofit-jp.css に差し替え、
+     このページの .card を撮影する。 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notofit-jp@0.1/notofit-jp.css">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e9eaee; }
+  .card {
+    width: 1200px; height: 630px; background: #fff; color: #111317;
+    font-family: "Notofit JP", sans-serif;
+    font-kerning: normal; text-autospace: normal;
+    padding: 84px 88px; display: flex; flex-direction: column; justify-content: space-between;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mark { font-size: 118px; line-height: 1; font-weight: 700; margin: 0; letter-spacing: -.015em; }
+  .lead { font-size: 30px; line-height: 1.6; margin: 30px 0 0; max-width: 20em; }
+  .lead span { color: #9aa0aa; }
+  .foot { display: flex; align-items: flex-end; justify-content: space-between; }
+  .sample { font-size: 46px; line-height: 1.35; margin: 0; }
+  .sample em { font-style: normal; color: #9aa0aa; }
+  .meta {
+    font-size: 20px; line-height: 1.7; color: #565c68; text-align: right; font-weight: 700;
+  }
+  .rule { height: 1px; background: #ececef; margin: 0 0 34px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div>
+      <h1 class="mark">Notofit JP</h1>
+      <p class="lead">Outfit と Noto Sans JP を合成した、<br>
+        Web 向けの和欧混植フォント<span>。</span></p>
+    </div>
+    <div>
+      <div class="rule"></div>
+      <div class="foot">
+        <p class="sample">日本語と English、<br>「約物」（括弧）。9:30</p>
+        <p class="meta">400 / 700<br><span style="color:#9aa0aa">SIL Open Font License 1.1</span></p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
