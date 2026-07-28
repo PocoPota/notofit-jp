@@ -3,15 +3,15 @@
     {
       "weight": 400,
       "jaWght": 400,
-      "latinWght": 400,
-      "scale": 1,
-      "baselineOffset": 0
+      "latinWght": 330,
+      "scale": 1.05,
+      "baselineOffset": 3
     },
     {
       "weight": 700,
       "jaWght": 700,
-      "latinWght": 700,
-      "scale": 1,
+      "latinWght": 600,
+      "scale": 1.06,
       "baselineOffset": 0
     }
   ],
