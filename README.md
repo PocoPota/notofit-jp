@@ -47,7 +47,7 @@ curl -sSL -o sources/Outfit.ttf \
 配布物のビルド:
 
 ```bash
-.venv/bin/python -m notofit.release            # dist/ を作る（約1分）
+.venv/bin/python -m notofit.release            # dist/ を作る（約4分）
 .venv/bin/python -m notofit.release --slices   # 区切りを取り直す
 ```
 

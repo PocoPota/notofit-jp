@@ -15,7 +15,7 @@ cfg = TuningConfig.load('config/tuning.json')
 TEXT = ':;：；xHAB0あ'
 SHIFTS = {':': 40, ';': -25}
 
-for weight in (400, 700):
+for weight in range(100, 1000, 100):
     print(f'\n=== wght={weight} ===')
     with tempfile.TemporaryDirectory() as tmp:
         before = TTFont(build_weight(cfg, weight, Path(tmp) / 'a', text=TEXT))

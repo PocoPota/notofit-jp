@@ -20,7 +20,7 @@
 
 <!-- ローカルで確認するときは ./font/notofit-jp.css に差し替える -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notofit-jp@0.1/notofit-jp.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap">
 
 <style>
   :root {
@@ -92,9 +92,7 @@
   /* ブラウザ側の約物処理を切った状態 */
   .raw { text-spacing-trim: space-all; }
 
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 44px 40px; }
   @media (max-width: 640px) {
-    .grid { grid-template-columns: 1fr; gap: 34px; }
     .wrap { padding-left: 20px; padding-right: 20px; }
     section { padding-top: 64px; padding-bottom: 64px; }
     header { padding-top: 72px; padding-bottom: 56px; }
@@ -128,7 +126,7 @@
     <p>和文を基準に、欧文の大きさ・ベースライン・コロン類の高さを合わせています。
       約物は隣り合ったときだけ詰まり、かなと全角英数はプロポーショナルです。</p>
     <p>行の高さと単独の約物の字送りは Noto Sans JP と一致するため、
-      <strong>置き換えとして使えます</strong>。ウェイトは 400 と 700、横書き専用。
+      <strong>置き換えとして使えます</strong>。ウェイトは 100〜900 の9段、横書き専用。
       SIL Open Font License 1.1。</p>
     <p class="status"><strong>現在 v0.1 の試用段階です。</strong>
       実際のページでの表示は確認していますが、使用例がまだ少なく、
@@ -139,15 +137,43 @@
 <hr class="rule">
 
 <section class="wrap">
-  <p class="eyebrow">Two weights</p>
-  <div class="grid">
+  <p class="eyebrow">Nine weights</p>
+  <div class="pair">
+    <div>
+      <span class="label">Thin / 100</span>
+      <p class="line small" style="font-weight:100">あのイーハトーヴォのすきとおった風 Notofit JP</p>
+    </div>
+    <div>
+      <span class="label">ExtraLight / 200</span>
+      <p class="line small" style="font-weight:200">あのイーハトーヴォのすきとおった風 Notofit JP</p>
+    </div>
+    <div>
+      <span class="label">Light / 300</span>
+      <p class="line small" style="font-weight:300">あのイーハトーヴォのすきとおった風 Notofit JP</p>
+    </div>
     <div>
       <span class="label">Regular / 400</span>
-      <p class="line" style="font-weight:400">あのイーハトーヴォの<br>すきとおった風</p>
+      <p class="line small" style="font-weight:400">あのイーハトーヴォのすきとおった風 Notofit JP</p>
+    </div>
+    <div>
+      <span class="label">Medium / 500</span>
+      <p class="line small" style="font-weight:500">あのイーハトーヴォのすきとおった風 Notofit JP</p>
+    </div>
+    <div>
+      <span class="label">SemiBold / 600</span>
+      <p class="line small" style="font-weight:600">あのイーハトーヴォのすきとおった風 Notofit JP</p>
     </div>
     <div>
       <span class="label">Bold / 700</span>
-      <p class="line" style="font-weight:700">あのイーハトーヴォの<br>すきとおった風</p>
+      <p class="line small" style="font-weight:700">あのイーハトーヴォのすきとおった風 Notofit JP</p>
+    </div>
+    <div>
+      <span class="label">ExtraBold / 800</span>
+      <p class="line small" style="font-weight:800">あのイーハトーヴォのすきとおった風 Notofit JP</p>
+    </div>
+    <div>
+      <span class="label">Black / 900</span>
+      <p class="line small" style="font-weight:900">あのイーハトーヴォのすきとおった風 Notofit JP</p>
     </div>
   </div>
 </section>

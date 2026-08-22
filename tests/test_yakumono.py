@@ -19,7 +19,7 @@ def shaper(font):
         return sum(p.x_advance for p in buf.glyph_positions) / 1000
     return w
 
-for wght in (400, 700):
+for wght in range(100, 1000, 100):
     print(f'\n=== wght={wght} ===')
     font = instancer.instantiateVariableFont(TTFont('sources/NotoSansJP.ttf'), {'wght': wght})
     before = shaper(font)

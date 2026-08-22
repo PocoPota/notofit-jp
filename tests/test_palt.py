@@ -19,7 +19,7 @@ SAMPLES = ['」「', '）（', '。」', 'あ、い。う']
 ok = lambda c: '\033[32mPASS\033[0m' if c else '\033[31mFAIL\033[0m'
 results = []
 
-for wght in (400, 700):
+for wght in range(100, 1000, 100):
     base = instancer.instantiateVariableFont(TTFont('sources/NotoSansJP.ttf'), {'wght': wght})
     w0 = widths(base)
     ref = {t: (w0(t), w0(t, {'palt': True})) for t in SAMPLES}

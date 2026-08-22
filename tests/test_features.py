@@ -12,7 +12,7 @@ def check(label, cond, detail=''):
     res.append(cond); print(f'  {label:44} {detail:22} {ok(cond)}')
 
 cfg = TuningConfig.load('config/tuning.json')
-for weight in (400, 700):
+for weight in range(100, 1000, 100):
     print(f'\n=== wght={weight} ===')
     with tempfile.TemporaryDirectory() as tmp:
         path = build_weight(cfg, weight, Path(tmp), text='」「。」（）あいうえおアイウＡ１x')
